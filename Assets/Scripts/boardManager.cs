@@ -79,48 +79,21 @@ public class boardManager : MonoBehaviour {
                 case TouchPhase.Moved:
                     swipeVector = touch.position - swipeStartPosition;
 
-                    //Should update to shift tiles to reflect swipe
+                    if(swipeVector.sqrMagnitude > Mathf.Pow(minSwipeDist,2))
+                    {
+                        for (int i = 0; i < tiles.Count; i++)
+                        {
+                            tiles[i].GetComponent<tile>().PartialSlide(swipeVector);
+                        }
+                    }
 
                     break;
 
                 case TouchPhase.Ended:
-                    float horizDist = Mathf.Abs(swipeVector.x);
-                    float vertDist = Mathf.Abs(swipeVector.y);
-
-                    //Check if swipe is longer than min length
-                    if(horizDist > minSwipeDist && horizDist > vertDist)
+                    for (int i = 0; i < tiles.Count; i++)
                     {
-                        if(swipeVector.x > 0)
-                        {
-                            for (int i = 0; i < tiles.Count; i++)
-                            {
-                                tiles[i].GetComponent<tileGO>().MoveTile(1, 0);
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < tiles.Count; i++)
-                            {
-                                tiles[i].GetComponent<tileGO>().MoveTile(-1, 0);
-                            }
-                        }
-                    }
-                    else if(vertDist > minSwipeDist)
-                    {
-                        if(swipeVector.y > 0)
-                        {
-                            for (int i = 0; i < tiles.Count; i++)
-                            {
-                                tiles[i].GetComponent<tileGO>().MoveTile(0,1);
-                            }
-                        }
-                        else
-                        {
-                            for (int i = 0; i < tiles.Count; i++)
-                            {
-                                tiles[i].GetComponent<tileGO>().MoveTile(0,-1);
-                            }
-                        }
+                        tiles[i].GetComponent<tile>().MoveTile();
+                        tiles[i].GetComponent<tile>().UpdateTile();
                     }
 
                     break;
@@ -133,31 +106,37 @@ public class boardManager : MonoBehaviour {
 #if UNITY_EDITOR    
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
+            Debug.Log("Hit up");
             for (int i = 0; i < tiles.Count; i++)
             {
-                tiles[i].GetComponent<tileGO>().MoveTile(0, 1);
+                tiles[i].GetComponent<tile>().MoveTile(0, 1);
             }
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             for (int i = 0; i < tiles.Count; i++)
             {
-                tiles[i].GetComponent<tileGO>().MoveTile(0, -1);
+                tiles[i].GetComponent<tile>().MoveTile(0, -1);
             }
         }
         else if (Input.GetKeyDown(KeyCode.LeftArrow))
         {
             for (int i = 0; i < tiles.Count; i++)
             {
-                tiles[i].GetComponent<tileGO>().MoveTile(-1, 0);
+                tiles[i].GetComponent<tile>().MoveTile(-1, 0);
             }
         }
         else if (Input.GetKeyDown(KeyCode.RightArrow))
         {
             for (int i = 0; i < tiles.Count; i++)
             {
-                tiles[i].GetComponent<tileGO>().MoveTile(1, 0);
+                tiles[i].GetComponent<tile>().MoveTile(1, 0);
             }
+        }
+
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            tiles[i].GetComponent<tile>().UpdateTile();
         }
 #endif
 
@@ -222,12 +201,12 @@ public class boardManager : MonoBehaviour {
                 newTile = blueTilePrefab;
             }
 
-            newTile.GetComponent<tileGO>().number = currentLevel.tiles[i].number;
+            newTile.GetComponent<tile>().number = currentLevel.tiles[i].number;
 
-            newTile.GetComponent<tileGO>().xPos = currentLevel.tiles[i].xPos;
-            newTile.GetComponent<tileGO>().yPos = currentLevel.tiles[i].yPos;
+            newTile.GetComponent<tile>().xPos = currentLevel.tiles[i].xPos;
+            newTile.GetComponent<tile>().yPos = currentLevel.tiles[i].yPos;
 
-            newTile.GetComponent<tileGO>().index = i;
+            newTile.GetComponent<tile>().index = i;
 
             tiles.Add(Instantiate(newTile));
             
