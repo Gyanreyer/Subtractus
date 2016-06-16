@@ -58,23 +58,15 @@
     <Reference Include="UnityEngine.Networking">
       <HintPath>Library\UnityAssemblies\UnityEngine.Networking.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.Networking">
-      <HintPath>Library\UnityAssemblies\UnityEngine.Networking.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>Library\UnityAssemblies\UnityEngine.UI.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
-    </Reference>
-    <Reference Include="LitJson">
-      <HintPath>Assets\Plugins\LitJson.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\boardManager.cs" />
     <Compile Include="Assets\Scripts\level.cs" />
     <Compile Include="Assets\Scripts\levelCollection.cs" />
+    <Compile Include="Assets\Scripts\levelManager.cs" />
     <Compile Include="Assets\Scripts\levelTile.cs" />
     <Compile Include="Assets\Scripts\tile.cs" />
   </ItemGroup>

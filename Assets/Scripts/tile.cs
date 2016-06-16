@@ -1,6 +1,11 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+public enum tileType
+{
+    red,
+    blue
+}
 
 public class tile : MonoBehaviour
 {
@@ -10,16 +15,21 @@ public class tile : MonoBehaviour
 
     private Vector2 tileDist;
 
-    public string type;
     public int number;
     public int xPos, yPos;
+    public tileType type;
 
     private Vector3 desiredLocation;
+    private Vector3 vecToDesired;
     private bool animating;
     private Vector3 animStartPosition;
     private float animStartTime;
 
+    private bool partialSwiping;
+    private const float minSwipeDist = 50f;
+
     private TextMesh numberText;
+    private GameObject spriteObject;
 
     enum SwipeDirection
     {
@@ -32,10 +42,14 @@ public class tile : MonoBehaviour
 
     SwipeDirection swipeDir;
 
+    
+
     // Use this for initialization
     void Start()
     {
         swipeDir = SwipeDirection.None;
+
+        spriteObject = transform.GetChild(0).gameObject;
 
         BM = GameObject.Find("BoardManagerGO").GetComponent<boardManager>();
         tileDist = new Vector2(BM.gridSpots[1, 0].transform.position.x - BM.gridSpots[0, 0].transform.position.x, BM.gridSpots[0, 1].transform.position.y - BM.gridSpots[0, 0].transform.position.y);
@@ -43,14 +57,17 @@ public class tile : MonoBehaviour
         GameObject gridSpace = GameObject.FindGameObjectWithTag("GridSpace");
 
         Vector3 gridSpaceWorldSize = gridSpace.GetComponent<MeshRenderer>().bounds.size;
-        gridSpaceWorldSize.x *= transform.localScale.x / GetComponent<SpriteRenderer>().bounds.size.x;
-        gridSpaceWorldSize.y *= transform.localScale.y / GetComponent<SpriteRenderer>().bounds.size.y;
+        gridSpaceWorldSize.x *= spriteObject.transform.localScale.x / GetComponentInChildren<SpriteRenderer>().bounds.size.x;
+        gridSpaceWorldSize.y *= spriteObject.transform.localScale.y / GetComponentInChildren<SpriteRenderer>().bounds.size.y;
 
-        transform.localScale = new Vector3(gridSpaceWorldSize.x, gridSpaceWorldSize.y, 1f);
+        spriteObject.transform.localScale = new Vector3(gridSpaceWorldSize.x, gridSpaceWorldSize.y, 1f);
 
-        numberText = transform.GetChild(0).GetComponent<TextMesh>();
+        transform.position = BM.gridSpots[xPos, yPos].transform.position;
+
+        numberText = transform.GetComponentInChildren<TextMesh>();
 
         numberText.text = number.ToString();
+        numberText.gameObject.transform.localScale = Vector3.one * spriteObject.transform.localScale.x;
 
         UpdateTile();
     }
@@ -58,30 +75,39 @@ public class tile : MonoBehaviour
     // Update is called once per frame
     void LateUpdate()
     {
-        
+        UpdateTile();
+
     }
 
     public void PartialSlide(Vector2 swipeVector)
     {
-        swipeVector /= Screen.dpi;
+        partialSwiping = true;
 
-        if (swipeDir == SwipeDirection.None)
+        Debug.Log(swipeVector);
+
+        if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y) && Mathf.Abs(swipeVector.x) > minSwipeDist && swipeDir != SwipeDirection.Up && swipeDir != SwipeDirection.Down)
         {
-            if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
-            {
-                if (swipeVector.x > 0)   
-                    swipeDir = SwipeDirection.Right;
-                else
-                    swipeDir = SwipeDirection.Left; 
-            }
+            if (swipeVector.x > 0)   
+                swipeDir = SwipeDirection.Right;
             else
-            {
-                if (swipeVector.y > 0)
-                    swipeDir = SwipeDirection.Up;
-                else
-                    swipeDir = SwipeDirection.Down;   
-            }
+                swipeDir = SwipeDirection.Left; 
         }
+        else if(Mathf.Abs(swipeVector.y) > minSwipeDist && swipeDir != SwipeDirection.Left && swipeDir != SwipeDirection.Right)
+        {
+            if (swipeVector.y > 0)
+                swipeDir = SwipeDirection.Up;
+            else
+                swipeDir = SwipeDirection.Down;   
+        }
+        else
+        {
+            Debug.Log("Test");
+            partialSwiping = false;
+            transform.position = BM.gridSpots[xPos, yPos].transform.position;
+            return;
+        }
+
+        swipeVector /= Screen.dpi;
 
         Vector3 newPos = BM.gridSpots[xPos,yPos].transform.position;
 
@@ -90,8 +116,6 @@ public class tile : MonoBehaviour
             if ((swipeVector.x < 0 && xPos > 0) || (swipeVector.x > 0 && xPos < BM.BoardWidth - 1))
             {
                 newPos.x += Mathf.Clamp(swipeVector.x, -(0.99f * tileDist.x), (0.99f * tileDist.x));
-                transform.position = newPos;
-
             }
         }
         else
@@ -99,9 +123,10 @@ public class tile : MonoBehaviour
             if ((swipeVector.y < 0 && yPos > 0) || (swipeVector.y > 0 && yPos < BM.BoardHeight - 1))
             { 
                 newPos.y += Mathf.Clamp(swipeVector.y, -(0.99f * tileDist.y), (0.99f * tileDist.y));
-                transform.position = newPos;
             }
         }
+
+        transform.position = newPos;
 
     }
 
@@ -154,26 +179,38 @@ public class tile : MonoBehaviour
         }
 
         swipeDir = SwipeDirection.None;
+        partialSwiping = false;
 
     }
 
     public void UpdateTile()
+    {
+        desiredLocation = BM.gridSpots[xPos, yPos].transform.position;
+
+        if (transform.position != desiredLocation)
+        {
+            MoveToDesired();
+        }
+    }
+
+    private void subtractNumbers()
     {
         tile otherTile;
         for (int i = 0; i < BM.Tiles.Count; i++)
         {
             otherTile = BM.Tiles[i].GetComponent<tile>();
 
-            if (otherTile.index != index && otherTile.xPos == xPos && otherTile.yPos == yPos)
+            if (!(animating || otherTile.animating) && otherTile.index != index && otherTile.xPos == xPos && otherTile.yPos == yPos)
             {
-                number = Mathf.Abs(number - BM.Tiles[i].GetComponent<tile>().number);
+                int newNumber = Mathf.Abs(number - otherTile.number);
+
+                number = Mathf.Abs(newNumber);
                 Destroy(BM.Tiles[i]);
                 BM.Tiles.RemoveAt(i);
+
+                break;
             }
         }
-
-        //transform.position = BM.gridSpots[xPos, yPos].transform.position;
-        desiredLocation = BM.gridSpots[xPos, yPos].transform.position;
 
         if (number == 0)
         {
@@ -184,20 +221,14 @@ public class tile : MonoBehaviour
         {
             numberText.text = number.ToString();
         }
-
-        MoveToDesired();
     }
 
     private void MoveToDesired()
     {
-        //Return early if already at desired point
-        if (transform.position == desiredLocation) {
-            animating = false;
-            return;
-        }
+        if (partialSwiping)
+            return;        
 
-        //Otherwise continue on...
-        //If not animating already, set animating state to true
+        //If not animating already, set animating state to true and store start info
         if(!animating)
         {
             animating = true;
@@ -205,19 +236,26 @@ public class tile : MonoBehaviour
             animStartTime = Time.time;
         }
         
+        //Update vector to desired
+        vecToDesired = desiredLocation - animStartPosition;
 
-        Vector3 distToDes = desiredLocation - animStartPosition;
+        //Calculate move speed for this frame, smooth step makes it ease in and out
+        float moveSpeed = Mathf.SmoothStep(0, vecToDesired.magnitude, (Time.time - animStartTime)/.3f);
+        //Calculate future position based on move speed
+        Vector3 futurePos = transform.position + (vecToDesired.normalized * moveSpeed);
 
-        float moveSpeed = Mathf.SmoothStep(0, 2f * distToDes.magnitude, (Time.time - animStartTime)/2f);
-
-        //Vector3 positionChange = Vector3.Lerp(animStartPosition, desiredLocation, moveSpeed * Time.deltaTime);
-
-        transform.position += distToDes.normalized * moveSpeed;
-
-        if((desiredLocation - transform.position).sqrMagnitude < 0.1f)
+        //If the future position will go past the desired location or is exactly on, set position to desired and end animation
+        if (Vector3.Dot(desiredLocation - futurePos, vecToDesired) < 0 || futurePos == desiredLocation)
         {
             transform.position = desiredLocation;
             animating = false;
+
+            subtractNumbers();
+        }
+        //Otherwise, change position as usual
+        else
+        {
+            transform.position = futurePos;
         }
 
     }

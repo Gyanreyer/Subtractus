@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using LitJson;
+using UnityEngine.UI;
 
 public class boardManager : MonoBehaviour {
 
@@ -16,7 +16,6 @@ public class boardManager : MonoBehaviour {
         Right
     }
 
-    private const float minSwipeDist = 50f;
 
     private Vector2 swipeStartPosition;
     private float swipeStartTime;
@@ -40,6 +39,9 @@ public class boardManager : MonoBehaviour {
     private level[] levels;
     private level currentLevel;
 
+    public Text movesText;
+
+
     public List<GameObject> Tiles { get { return tiles; } }
     public int BoardWidth { get { return currentLevel.width; } }
     public int BoardHeight { get { return currentLevel.height; } }
@@ -48,12 +50,12 @@ public class boardManager : MonoBehaviour {
     void Start () {
 
         tiles = new List<GameObject>();
+        string levelString = Resources.Load<TextAsset>("levels").text;
 
-        string levelString = File.ReadAllText(Application.dataPath + "/Data/levels.json");//String contains all data text for levels
         levels = JsonUtility.FromJson<levelCollection>(levelString).levels;
         levelString = null; //Clear out string now that it's parsed
 
-        loadLevel(0);
+        loadLevel(0);   
 
 
     }
@@ -79,12 +81,9 @@ public class boardManager : MonoBehaviour {
                 case TouchPhase.Moved:
                     swipeVector = touch.position - swipeStartPosition;
 
-                    if(swipeVector.sqrMagnitude > Mathf.Pow(minSwipeDist,2))
+                    for (int i = 0; i < tiles.Count; i++)
                     {
-                        for (int i = 0; i < tiles.Count; i++)
-                        {
-                            tiles[i].GetComponent<tile>().PartialSlide(swipeVector);
-                        }
+                        tiles[i].GetComponent<tile>().PartialSlide(swipeVector);
                     }
 
                     break;
@@ -96,8 +95,9 @@ public class boardManager : MonoBehaviour {
                         tiles[i].GetComponent<tile>().UpdateTile();
                     }
 
-                    break;
+                    addMove();
 
+                    break;
             }
 
         }
@@ -106,7 +106,6 @@ public class boardManager : MonoBehaviour {
 #if UNITY_EDITOR    
         if (Input.GetKeyDown(KeyCode.UpArrow))
         {
-            Debug.Log("Hit up");
             for (int i = 0; i < tiles.Count; i++)
             {
                 tiles[i].GetComponent<tile>().MoveTile(0, 1);
@@ -133,16 +132,17 @@ public class boardManager : MonoBehaviour {
                 tiles[i].GetComponent<tile>().MoveTile(1, 0);
             }
         }
+        else
+            return;
 
-        for (int i = 0; i < tiles.Count; i++)
-        {
-            tiles[i].GetComponent<tile>().UpdateTile();
-        }
+        addMove();
 #endif
+
+
 
     }
 
-    void loadLevel(int levelNumber)
+    public void loadLevel(int levelNumber)
     {
         currentLevel = levels[levelNumber];
 
@@ -152,7 +152,7 @@ public class boardManager : MonoBehaviour {
 
     }
 
-    void buildBoard(int width, int height)
+    private void buildBoard(int width, int height)
     {
         gridSpots = new GameObject[width, height];
 
@@ -173,6 +173,7 @@ public class boardManager : MonoBehaviour {
 
         Vector3 startPos = background.GetComponent<MeshRenderer>().bounds.min + (spaceWorldScale + worldBorder) / 2;
 
+
         for (int y = 0; y < height; y++)
         {
             for (int x = 0; x < width; x++)
@@ -182,9 +183,10 @@ public class boardManager : MonoBehaviour {
         }
 
         background.transform.localScale *= 1.03f;
+
     }
 
-    void LoadTiles()
+    private void LoadTiles()
     {
 
         for (int i = 0; i < currentLevel.tiles.Length; i++)
@@ -211,6 +213,16 @@ public class boardManager : MonoBehaviour {
             tiles.Add(Instantiate(newTile));
             
 
+        }
+    }
+
+    public void addMove()
+    {
+        if (tiles.Count > 0)
+        {
+            moves++;
+
+            movesText.text = "Moves: " + moves;
         }
     }
 }
