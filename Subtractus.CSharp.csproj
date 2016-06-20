@@ -67,7 +67,9 @@
     <Compile Include="Assets\Scripts\level.cs" />
     <Compile Include="Assets\Scripts\levelCollection.cs" />
     <Compile Include="Assets\Scripts\levelManager.cs" />
+    <Compile Include="Assets\Scripts\levelSelectButton.cs" />
     <Compile Include="Assets\Scripts\levelTile.cs" />
+    <Compile Include="Assets\Scripts\sceneTransition.cs" />
     <Compile Include="Assets\Scripts\tile.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />

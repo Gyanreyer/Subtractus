@@ -1,256 +1,300 @@
 ﻿using UnityEngine;
-using System.Collections;
-
-public enum tileType
-{
-    red,
-    blue
-}
 
 public class tile : MonoBehaviour
 {
-
-    private boardManager BM;
-    public int index;
-
-    private Vector2 tileDist;
-
-    public int number;
-    public int xPos, yPos;
-    public tileType type;
-
-    private Vector3 desiredLocation;
-    private Vector3 vecToDesired;
-    private bool animating;
-    private Vector3 animStartPosition;
-    private float animStartTime;
-
-    private bool partialSwiping;
-    private const float minSwipeDist = 50f;
-
-    private TextMesh numberText;
-    private GameObject spriteObject;
-
-    enum SwipeDirection
+    public enum tileType
     {
-        None,
-        Left,
-        Right,
-        Up,
-        Down
+        red,
+        blue
     }
 
-    SwipeDirection swipeDir;
+    public enum tileState
+    {
+        idle,
+        swiping,
+        animating
+    }
 
-    
+    private boardManager BM;//Board manager
+
+    public int index;//Index of tile used to uniquely identify it
+
+    public int number;//Number of tile
+    public int xPos, yPos;//x and y coordinates of tile on grid
+    public int futureX, futureY;//Future coords on grid based on current swipe, will just be equal to current coords if not swiping
+    public tileType type;//Type of tile, red or blue
+
+    //Stuff for animating to new position
+    private Vector3 desiredLocation;//Location that tile wants to animate to
+    private Vector3 startToDesired;//Vector from start off animation to desired
+    private Vector3 animStartPosition;//Start position of animation
+    private float animStartTime;//Time at start of animation
+
+    tileState state;//State that tile is in
+
+    private TextMesh numberText;//Text for tile's number
+
 
     // Use this for initialization
-    void Start()
+    void Awake()
     {
-        swipeDir = SwipeDirection.None;
+        //Set future coords to current
+        futureX = xPos;
+        futureY = yPos;
 
-        spriteObject = transform.GetChild(0).gameObject;
+        state = tileState.idle;//Default state is idle
 
-        BM = GameObject.Find("BoardManagerGO").GetComponent<boardManager>();
-        tileDist = new Vector2(BM.gridSpots[1, 0].transform.position.x - BM.gridSpots[0, 0].transform.position.x, BM.gridSpots[0, 1].transform.position.y - BM.gridSpots[0, 0].transform.position.y);
+        GameObject spriteObject = transform.GetChild(0).gameObject;//Get child with sprite for resizing object to fit grid
 
-        GameObject gridSpace = GameObject.FindGameObjectWithTag("GridSpace");
+        BM = GameObject.Find("BoardManagerGO").GetComponent<boardManager>();//Get board manager
 
-        Vector3 gridSpaceWorldSize = gridSpace.GetComponent<MeshRenderer>().bounds.size;
-        gridSpaceWorldSize.x *= spriteObject.transform.localScale.x / GetComponentInChildren<SpriteRenderer>().bounds.size.x;
+        GameObject gridSpace = GameObject.FindGameObjectWithTag("GridSpace");//Get a grid space from the board for sizing to match it
+
+        Vector3 gridSpaceWorldSize = gridSpace.GetComponent<SpriteRenderer>().bounds.size;//Get world unit size of grid space
+        gridSpaceWorldSize.x *= spriteObject.transform.localScale.x / GetComponentInChildren<SpriteRenderer>().bounds.size.x;//Convert world sizes to local size for this tile
         gridSpaceWorldSize.y *= spriteObject.transform.localScale.y / GetComponentInChildren<SpriteRenderer>().bounds.size.y;
 
-        spriteObject.transform.localScale = new Vector3(gridSpaceWorldSize.x, gridSpaceWorldSize.y, 1f);
+        transform.localScale = gridSpaceWorldSize * 755f / 720f;//Modify scale based on portion of tile that is shaded (35px/720px) to add to 3D effect of sprites
 
-        transform.position = BM.gridSpots[xPos, yPos].transform.position;
+        transform.position = GetModifiedDesired();//Set position to appropriate area 
+        desiredLocation = transform.position;//Desired location is same as pos by default
 
-        numberText = transform.GetComponentInChildren<TextMesh>();
+        numberText = transform.GetComponentInChildren<TextMesh>();//Get text component for number from child
 
+        //Set up number text to display right number and scale correctly so it doesn't get stretched
         numberText.text = number.ToString();
-        numberText.gameObject.transform.localScale = Vector3.one * spriteObject.transform.localScale.x;
+        numberText.gameObject.transform.localScale *= spriteObject.transform.localScale.x;
 
-        UpdateTile();
     }
 
     // Update is called once per frame
     void LateUpdate()
     {
-        UpdateTile();
-
+        //If desired location is different and not in swiping state, we should animate to desired
+        if (transform.position != desiredLocation && state != tileState.swiping)
+        {
+            AnimateToDesired();
+        }
     }
 
+    //Partially slide tile to indicate swipe direction
     public void PartialSlide(Vector2 swipeVector)
     {
-        partialSwiping = true;
+        //If currently animating, ignore swipes until done
+        if (state == tileState.animating)
+            return;
 
-        Debug.Log(swipeVector);
+        state = tileState.swiping;//Set state to swiping
 
-        if (Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y) && Mathf.Abs(swipeVector.x) > minSwipeDist && swipeDir != SwipeDirection.Up && swipeDir != SwipeDirection.Down)
+        //Reset future coords, modify them as needed
+        futureX = xPos;
+        futureY = yPos;
+
+        //If swipe vector is longer horiz than vert and swipe wasn't being swiped vertically earlier
+        if (BM.swipeDir == SwipeDirection.horizontal)
         {
-            if (swipeVector.x > 0)   
-                swipeDir = SwipeDirection.Right;
+            //Determine if swipe is right or left
+            if (swipeVector.x > 0)
+            {
+                futureX += 1;
+            }
             else
-                swipeDir = SwipeDirection.Left; 
+            {
+                futureX -= 1;
+            } 
         }
-        else if(Mathf.Abs(swipeVector.y) > minSwipeDist && swipeDir != SwipeDirection.Left && swipeDir != SwipeDirection.Right)
+        //If swipe vector is vert and wasn't being swiped horiz earlier
+        else if(BM.swipeDir == SwipeDirection.vertical)
         {
+            //Determine if swipe is up or down
             if (swipeVector.y > 0)
-                swipeDir = SwipeDirection.Up;
+            {
+                futureY += 1;
+            }
             else
-                swipeDir = SwipeDirection.Down;   
+            {
+                futureY -= 1;
+            }
         }
+
+        //Other tile to check against
+        tile otherTile;
+
+        //Check if pushing against a tile of a different type, don't move if so
+        for (int i = 0; i < BM.Tiles.Count; i++)
+        {
+            otherTile = BM.Tiles[i].GetComponent<tile>();//Get other tile from list
+
+            //If other tile is a different type and has same future coords that means we are pushing into it and shouldn't combine, return early and reset future coords
+            if (otherTile.index != index && otherTile.type != type && otherTile.futureX == futureX && otherTile.futureY == futureY && otherTile.state == tileState.idle)
+            {
+                futureX = xPos;
+                futureY = yPos;
+
+                state = tileState.idle;
+
+                return;
+            }
+        }
+
+        swipeVector /= Screen.dpi;//Convert swipe vector from pixels to world units for position
+
+        Vector3 newPos = BM.GridPosition[xPos,yPos] - new Vector3(0,0, 1 + xPos + yPos);//Set new position to position of grid tile is currently at, then modify from there
+
+        //If future x coords are different and are within bounds of grid, modify x pos based on swipe vector
+        if (futureX != xPos && futureX >= 0 && futureX < BM.BoardWidth)
+        {
+            newPos.x += Mathf.Clamp(swipeVector.x, -(0.85f * BM.TileDist.x), (0.85f * BM.TileDist.x));  
+        }
+        //If y coords are different and within bounds, modify y pos
+        else if(futureY != yPos && futureY >= 0 && futureY < BM.BoardHeight)
+        { 
+            newPos.y += Mathf.Clamp(swipeVector.y, -(0.85f * BM.TileDist.y), (0.85f * BM.TileDist.y));       
+        }
+        //If neither, reset state and return
         else
         {
-            Debug.Log("Test");
-            partialSwiping = false;
-            transform.position = BM.gridSpots[xPos, yPos].transform.position;
+            futureX = xPos;
+            futureY = yPos;
+
+            state = tileState.idle;
+
             return;
         }
 
-        swipeVector /= Screen.dpi;
+        transform.position = newPos;//Set position to newly calculated swipe position
 
-        Vector3 newPos = BM.gridSpots[xPos,yPos].transform.position;
-
-        if (swipeDir == SwipeDirection.Left || swipeDir == SwipeDirection.Right)
+        //If the swipe is less than 1/5 of distance to next, reset future coords so that on release tiles will slide back into place rather than moving
+        if(Mathf.Abs(swipeVector.x) < BM.TileDist.x * 0.2f && Mathf.Abs(swipeVector.y) < BM.TileDist.y * 0.2f)
         {
-            if ((swipeVector.x < 0 && xPos > 0) || (swipeVector.x > 0 && xPos < BM.BoardWidth - 1))
-            {
-                newPos.x += Mathf.Clamp(swipeVector.x, -(0.99f * tileDist.x), (0.99f * tileDist.x));
-            }
+            futureX = xPos;
+            futureY = yPos;
         }
-        else
-        {
-            if ((swipeVector.y < 0 && yPos > 0) || (swipeVector.y > 0 && yPos < BM.BoardHeight - 1))
-            { 
-                newPos.y += Mathf.Clamp(swipeVector.y, -(0.99f * tileDist.y), (0.99f * tileDist.y));
-            }
-        }
-
-        transform.position = newPos;
-
     }
 
-    public void MoveTile(int xChange, int yChange)
+    //Move the tile on the grid based on keyboard input, DELETE THIS EVENTUALLY
+    public bool MoveTile(int xChange, int yChange)
     {
         int newX = xPos + xChange;
         int newY = yPos + yChange;
 
-        if (newX >= 0 && newX < BM.BoardWidth)
-        {
-            xPos = newX;
-        }
-
-        if (newY >= 0 && newY < BM.BoardHeight)
-        {
-            yPos = newY;
-        }
-    }
-
-    public void MoveTile()
-    {
-        int newX = xPos;
-        int newY = yPos;
-
-        if(swipeDir == SwipeDirection.Right)
-        {
-            newX += 1;
-        }
-        else if(swipeDir == SwipeDirection.Left)
-        {
-            newX -= 1;
-        }
-        else if(swipeDir == SwipeDirection.Up)
-        {
-            newY += 1;
-        }
-        else
-        {
-            newY -= 1;
-        }
-
-        if (newX >= 0 && newX < BM.BoardWidth)
-        {
-            xPos = newX;
-        }
-
-        if (newY >= 0 && newY < BM.BoardHeight)
-        {
-            yPos = newY;
-        }
-
-        swipeDir = SwipeDirection.None;
-        partialSwiping = false;
-
-    }
-
-    public void UpdateTile()
-    {
-        desiredLocation = BM.gridSpots[xPos, yPos].transform.position;
-
-        if (transform.position != desiredLocation)
-        {
-            MoveToDesired();
-        }
-    }
-
-    private void subtractNumbers()
-    {
         tile otherTile;
+
         for (int i = 0; i < BM.Tiles.Count; i++)
         {
             otherTile = BM.Tiles[i].GetComponent<tile>();
 
-            if (!(animating || otherTile.animating) && otherTile.index != index && otherTile.xPos == xPos && otherTile.yPos == yPos)
+            if (otherTile.xPos == newX && otherTile.yPos == newY && otherTile.type != type)
             {
-                int newNumber = Mathf.Abs(number - otherTile.number);
-
-                number = Mathf.Abs(newNumber);
-                Destroy(BM.Tiles[i]);
-                BM.Tiles.RemoveAt(i);
-
-                break;
+                desiredLocation = GetModifiedDesired();
+                return false;
             }
         }
 
+
+        bool moving = false;
+
+        if (xChange != 0 && newX >= 0 && newX < BM.BoardWidth)
+        {
+            xPos = newX;
+            moving = true;
+        }
+        if (yChange != 0 && newY >= 0 && newY < BM.BoardHeight)
+        {
+            yPos = newY;
+            moving = true;
+        }
+
+        
+        desiredLocation = GetModifiedDesired();
+
+        return moving;
+
+    }
+
+    //Move the tile on the grid based on its future coords from swiping, returns whether the tile moved
+    public bool MoveTile()
+    {
+        state = tileState.idle;//Reset state to idle
+
+        //Whether tile should move
+        bool moving = (futureX != xPos || futureY != yPos);
+
+        //If should move, set coords to new ones
+        if (moving)
+        {
+            xPos = futureX;
+            yPos = futureY;
+        }
+
+        //Set new desired location to animate to based on new coords
+        desiredLocation = GetModifiedDesired();
+
+        return moving;//True if tile moved, false if didn't, BM can use to determine if a move should be added to counter
+    }
+
+    //Check if at same position as other tile and subtract their numbers
+    private void subtractNumbers()
+    {
+        tile otherTile;//Other tile to check against
+
+        //Loop through all active tiles
+        for (int i = 0; i < BM.Tiles.Count; i++)
+        {
+            otherTile = BM.Tiles[i].GetComponent<tile>();
+
+            //If other tile has some coords...
+            if (otherTile.index != index && otherTile.xPos == xPos && otherTile.yPos == yPos)
+            {
+                number = Mathf.Abs(number - otherTile.number);//Set new number to result of subtraction from this tile's number and other number
+
+                //Destroy the other tile and remove from list
+                Destroy(BM.Tiles[i]);
+                BM.Tiles.RemoveAt(i);
+
+                break;//We found the tile so no need to continue, break loop here
+            }
+        }
+
+        //If this tile's number is 0 destroy and remove it
         if (number == 0)
         {
             BM.Tiles.Remove(this.gameObject);
             Destroy(this.gameObject);
         }
-        else
+        else//Otherwise, update the number text
         {
             numberText.text = number.ToString();
         }
     }
 
-    private void MoveToDesired()
-    {
-        if (partialSwiping)
-            return;        
-
-        //If not animating already, set animating state to true and store start info
-        if(!animating)
+    //Animate to the desired position
+    private void AnimateToDesired()
+    {  
+        //If not animating already, set state to animating and store start info
+        if(state != tileState.animating)
         {
-            animating = true;
+            state = tileState.animating;
+
             animStartPosition = transform.position;
             animStartTime = Time.time;
+   
+            startToDesired = desiredLocation - animStartPosition;//Vector from start pos to desired for reference during anim
         }
-        
-        //Update vector to desired
-        vecToDesired = desiredLocation - animStartPosition;
 
         //Calculate move speed for this frame, smooth step makes it ease in and out
-        float moveSpeed = Mathf.SmoothStep(0, vecToDesired.magnitude, (Time.time - animStartTime)/.3f);
+        float moveSpeed = Mathf.SmoothStep(0, startToDesired.magnitude, (Time.time - animStartTime)/0.5f);
         //Calculate future position based on move speed
-        Vector3 futurePos = transform.position + (vecToDesired.normalized * moveSpeed);
+        Vector3 futurePos = transform.position + (startToDesired.normalized * moveSpeed);
 
-        //If the future position will go past the desired location or is exactly on, set position to desired and end animation
-        if (Vector3.Dot(desiredLocation - futurePos, vecToDesired) < 0 || futurePos == desiredLocation)
+        //If the future position will go past the desired location or is exactly on, end animation
+        if (Vector3.Dot(desiredLocation - futurePos, startToDesired) < 0 || futurePos == desiredLocation)
         {
-            transform.position = desiredLocation;
-            animating = false;
+            transform.position = desiredLocation;//Snap position to desired
 
-            subtractNumbers();
+            state = tileState.idle;//Change state from animating
+
+            subtractNumbers();//Subtract numbers with other tile if necessary
         }
         //Otherwise, change position as usual
         else
@@ -258,6 +302,12 @@ public class tile : MonoBehaviour
             transform.position = futurePos;
         }
 
+    }
+
+    //Returns desired grid position with modified z for appropriate draw order
+    private Vector3 GetModifiedDesired()
+    {
+        return BM.GridPosition[xPos, yPos] - new Vector3(0, 0, 1 + xPos + yPos);
     }
 
 }
