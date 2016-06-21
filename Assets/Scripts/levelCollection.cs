@@ -2,5 +2,4 @@
 public class levelCollection {
 
     public level[] levels;
-
 }

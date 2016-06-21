@@ -68,7 +68,10 @@
     <Compile Include="Assets\Scripts\levelCollection.cs" />
     <Compile Include="Assets\Scripts\levelManager.cs" />
     <Compile Include="Assets\Scripts\levelSelectButton.cs" />
+    <Compile Include="Assets\Scripts\levelSelectManager.cs" />
     <Compile Include="Assets\Scripts\levelTile.cs" />
+    <Compile Include="Assets\Scripts\save.cs" />
+    <Compile Include="Assets\Scripts\saveCollection.cs" />
     <Compile Include="Assets\Scripts\sceneTransition.cs" />
     <Compile Include="Assets\Scripts\tile.cs" />
   </ItemGroup>

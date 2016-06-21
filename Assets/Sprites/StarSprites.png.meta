@@ -1,0 +1,151 @@
+fileFormatVersion: 2
+guid: ade6bc98a5609594e8fb2f2a6344b418
+timeCreated: 1466481709
+licenseType: Free
+TextureImporter:
+  fileIDToRecycleName:
+    21300000: SilverStar
+    21300002: GoldStar
+  serializedVersion: 2
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 1
+    linearTexture: 0
+    correctGamma: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 0
+  cubemapConvolution: 0
+  cubemapConvolutionSteps: 7
+  cubemapConvolutionExponent: 1.5
+  seamlessCubemap: 0
+  textureFormat: -1
+  maxTextureSize: 1024
+  textureSettings:
+    filterMode: -1
+    aniso: 16
+    mipBias: -1
+    wrapMode: 1
+  nPOTScale: 0
+  lightmap: 0
+  rGBM: 0
+  compressionQuality: 50
+  allowsAlphaSplitting: 0
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spritePixelsToUnits: 100
+  alphaIsTransparency: 1
+  textureType: 8
+  buildTargetSettings: []
+  spriteSheet:
+    sprites:
+    - name: SilverStar
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 720
+        height: 720
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 1, y: -140}
+        - {x: 85, y: -205}
+        - {x: 132, y: -241}
+        - {x: 153, y: -256}
+        - {x: 162, y: -256}
+        - {x: 156, y: -232}
+        - {x: 129, y: -144}
+        - {x: 108, y: -83}
+        - {x: 101, y: -62}
+        - {x: 119, y: -50}
+        - {x: 201, y: 12}
+        - {x: 256, y: 57}
+        - {x: 256, y: 63}
+        - {x: 63, y: 63}
+        - {x: 60, y: 78}
+        - {x: 28, y: 183}
+        - {x: 4, y: 256}
+        - {x: -4, y: 256}
+        - {x: -21, y: 208}
+        - {x: -62, y: 70}
+        - {x: -63, y: 63}
+        - {x: -256, y: 63}
+        - {x: -256, y: 56}
+        - {x: -247, y: 48}
+        - {x: -132, y: -40}
+        - {x: -112, y: -55}
+        - {x: -104, y: -67}
+        - {x: -111, y: -89}
+        - {x: -130, y: -152}
+        - {x: -160, y: -250}
+        - {x: -161, y: -256}
+        - {x: -153, y: -256}
+        - {x: -132, y: -241}
+        - {x: -85, y: -205}
+        - {x: -36, y: -167}
+    - name: GoldStar
+      rect:
+        serializedVersion: 2
+        x: 720
+        y: 0
+        width: 720
+        height: 720
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline:
+      - - {x: 1, y: -140}
+        - {x: 85, y: -205}
+        - {x: 132, y: -241}
+        - {x: 153, y: -256}
+        - {x: 162, y: -256}
+        - {x: 156, y: -232}
+        - {x: 129, y: -144}
+        - {x: 108, y: -83}
+        - {x: 101, y: -62}
+        - {x: 119, y: -50}
+        - {x: 201, y: 12}
+        - {x: 256, y: 57}
+        - {x: 256, y: 63}
+        - {x: 63, y: 63}
+        - {x: 60, y: 78}
+        - {x: 28, y: 183}
+        - {x: 4, y: 256}
+        - {x: -4, y: 256}
+        - {x: -21, y: 208}
+        - {x: -62, y: 70}
+        - {x: -63, y: 63}
+        - {x: -256, y: 63}
+        - {x: -256, y: 56}
+        - {x: -247, y: 48}
+        - {x: -132, y: -40}
+        - {x: -112, y: -55}
+        - {x: -104, y: -67}
+        - {x: -111, y: -89}
+        - {x: -130, y: -152}
+        - {x: -160, y: -250}
+        - {x: -161, y: -256}
+        - {x: -153, y: -256}
+        - {x: -132, y: -241}
+        - {x: -85, y: -205}
+        - {x: -36, y: -167}
+    outline: []
+  spritePackingTag: 
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

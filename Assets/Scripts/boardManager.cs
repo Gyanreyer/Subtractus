@@ -11,14 +11,27 @@ public enum SwipeDirection
 
 public class boardManager : MonoBehaviour {
 
+    private enum GameState
+    {
+        playing,
+        won,
+        stopped
+    }
+
     //Prefabs for red and blue tiles, each has sprite and number text
     public GameObject redTilePrefab;
     public GameObject blueTilePrefab;
 
     //Prefabs for grid's background and spaces to use when building the level's grid
     public GameObject gridBG;
-    public GameObject gridSpace;
+    public GameObject gridSpacePrefab;
 
+
+    public Sprite silverStar;
+    public Sprite goldStar;
+
+    
+    public GameObject winPopup;//Popup UI menu that appears when player beats game
     public Text movesText;//UI text for moves counter
 
     private levelManager levManager;//Level manager used to build board for current level, get it in Start
@@ -27,7 +40,9 @@ public class boardManager : MonoBehaviour {
     private const float minSwipeDist = 50f;//Minimum distance to detect a swipe
     private Vector2 swipeStartPosition;//Point on screen where player started a swipe
     private Vector2 swipeVector;//Vector from start position to where player's finger is now to represent swipe
-    public SwipeDirection swipeDir;//Direction that current swipe is in
+    private SwipeDirection swipeDir;//Direction that current swipe is in
+
+    private GameState gameState;
 
     private Vector3[,] gridPosition;//2D array of the coordinates for each space on the grid
 
@@ -36,6 +51,8 @@ public class boardManager : MonoBehaviour {
     private int moves = 0;//Number of moves the player has made for this level
     private float borderWidth = 0.02f;//Width of borders between spaces on grid in percent of background size
     private Vector2 tileDist;//Vector holds x and y distance between grid spaces
+    private float worldScreenWidth;
+    private float localScreenWidth;
 
     //Properties
     public List<GameObject> Tiles { get { return tiles; } }
@@ -43,6 +60,7 @@ public class boardManager : MonoBehaviour {
     public int BoardWidth { get { return currentLevel.width; } }
     public int BoardHeight { get { return currentLevel.height; } }
     public Vector2 TileDist { get { return tileDist; } }
+    public SwipeDirection SwipeDir { get { return swipeDir; } }
 
     // Use this for initialization
     void Start () {
@@ -51,17 +69,31 @@ public class boardManager : MonoBehaviour {
         swipeDir = SwipeDirection.none;//Set swipe direction to defaul
 
         levManager = GameObject.Find("LevelManager").GetComponent<levelManager>();//Get level manager from level manager gameobject in scene
-
         currentLevel = levManager.CurrentLevel;//Get current level from level manager, will reference this for building board
 
-        buildGrid();//Sets up grid with appropriate spaces reflecting current level's width and height
+        worldScreenWidth = Camera.main.orthographicSize * 2f * Screen.width / Screen.height;//Get width of screen in world units
+                                                                                                  //(orthographic size of cam is 1/2 of screen height, so multiply by 2 and then the ratio of width/height to get width)
 
-        LoadTiles();//Loads tiles based on current level
+        localScreenWidth = worldScreenWidth / gridBG.GetComponent<SpriteRenderer>().bounds.size.x;//Get local width of screen by dividing world width by width of background sprite
+
+
+        buildGrid();//Sets up grid with appropriate spaces reflecting current level's width and height, then calls LoadTiles function to load in tiles
+
+        gameState = GameState.playing;
     }
 
 	// Update is called once per frame
 	void Update () {
-        getInput();//Get input from player each frame
+        if(tiles.Count <= 0)
+        {
+            gameState = GameState.won;
+            winLevel();
+        }
+
+        
+        else if(gameState == GameState.playing)
+            getInput();//Get input from player each frame while playing          
+            
     }
 
     //Get input from player
@@ -140,74 +172,21 @@ public class boardManager : MonoBehaviour {
 
         
 #endif
-        //If in editor just use keyboard controls, TAKE THIS OUT IN FINAL VERSION
-#if UNITY_EDITOR    
-        bool moved = false;
-
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                if(tiles[i].GetComponent<tile>().MoveTile(0, 1))
-                {
-                    moved = true;
-                }
-            }
-        }
-        else if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                if(tiles[i].GetComponent<tile>().MoveTile(0, -1))
-                {
-                    moved = true;
-                }
-            }
-        }
-        else if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                if(tiles[i].GetComponent<tile>().MoveTile(-1, 0))
-                {
-                    moved = true;
-                }
-            }
-        }
-        else if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            for (int i = 0; i < tiles.Count; i++)
-            {
-                if(tiles[i].GetComponent<tile>().MoveTile(1, 0))
-                {
-                    moved = true;
-                }
-            }
-        }
-        else
-            return;
-
-        if(moved)
-            addMove();
-#endif
 
     }
 
     //Builds grid based on width and height of current level
     private void buildGrid()
     {
-        gridSpace.transform.localScale = Vector3.one;//Ensure that grid space prefab is full default size so that it can be resized correctly        
+        currentLevel = levManager.CurrentLevel;
 
-        GameObject background = (GameObject)Instantiate(gridBG, Vector3.zero, gridBG.transform.rotation);//Instantiate background for grid
-
-        float worldScreenWidth = Camera.main.orthographicSize * 2f * Screen.width / Screen.height;//Get width of screen in world units
-                                //(orthographic size of cam is 1/2 of screen height, so multiply by 2 and then the ratio of width/height to get width)
-
-        float localScreenWidth = worldScreenWidth / background.GetComponent<SpriteRenderer>().bounds.size.x;//Get local width of screen by dividing world width by width of background sprite
+        GameObject background = Instantiate(gridBG);//Instantiate background for grid
 
         background.transform.localScale = new Vector3(localScreenWidth * 0.9f, localScreenWidth, 1f);//Scale background down so that it only takes up 90% of screen width
 
         Vector3 bgSize = background.transform.localScale;//Store scale of background for easier access
+
+        GameObject gridSpace = Instantiate(gridSpacePrefab);
 
         //Set scale of grid space prefab to appropriate portion of grid, also factoring in border width
         gridSpace.transform.localScale = new Vector3((bgSize.x / (float)currentLevel.width) - borderWidth * bgSize.x, (bgSize.y / (float)currentLevel.height) - borderWidth * bgSize.y, 1f);
@@ -216,35 +195,54 @@ public class boardManager : MonoBehaviour {
         Vector3 worldBorder = background.GetComponent<SpriteRenderer>().bounds.size * borderWidth;//Store size of border in world units by multiplying background's size by border width percentage
 
         //Calculate start position from where grid spaces will spawn, this is in lower left corner and will have grid coordinates (0,0)
-        Vector3 startPos = background.GetComponent<SpriteRenderer>().bounds.min + new Vector3(spaceWorldScale.x, 0, 0) + worldBorder / 2;
+        Vector3 startPos = background.GetComponent<SpriteRenderer>().bounds.min + new Vector3(spaceWorldScale.x, 0, -0.5f) + (worldBorder / 2);
 
         background.transform.localScale *= 1.04f;//Increase size of background so that its outer borders are slightly larger
-
 
         gridPosition = new Vector3[currentLevel.width, currentLevel.height];//Initialize grid position array to dimensions of grid
         GameObject newSpace;//Temporarily store grid spaces as they are spawned for each position on grid
 
+        tileDist = new Vector2(worldBorder.x + spaceWorldScale.x, worldBorder.y + spaceWorldScale.y);
+
+        gridSpace.transform.position = startPos;
+
         //Loop through all grid coordinates and spawn a new space at each one
         for (int y = 0; y < currentLevel.height; y++)
         {
+            gridSpace.transform.position = new Vector3(startPos.x,gridSpace.transform.position.y,-0.5f);
+
             for (int x = 0; x < currentLevel.width; x++)
             {
                 //Instantiate at appropriate position based on coordinates
-                newSpace = (GameObject)Instantiate(gridSpace, startPos + new Vector3((worldBorder.x + spaceWorldScale.x) * x, (worldBorder.y + spaceWorldScale.y) * y, -0.5f), Quaternion.identity);
+                newSpace = Instantiate(gridSpace);//(GameObject)Instantiate(gridSpacePrefab, startPos + new Vector3((worldBorder.x + spaceWorldScale.x) * x, (worldBorder.y + spaceWorldScale.y) * y, -0.5f), Quaternion.identity);
                 newSpace.transform.parent = background.transform;
 
                 gridPosition[x, y] = newSpace.transform.position;//Store position for grid space at these coordinates
+
+                gridSpace.transform.position += new Vector3(tileDist.x,0,0);
             }
-        }   
 
-        tileDist = new Vector2(gridPosition[1, 0].x - gridPosition[0, 0].x, gridPosition[0, 1].y - gridPosition[0, 0].y);
+            gridSpace.transform.position += new Vector3(0,tileDist.y,0);
+        }
 
+        LoadTiles(gridSpace);
+
+        Destroy(gridSpace);
     }
 
     //Loads tiles from current level and places them on grid
-    private void LoadTiles()
+    private void LoadTiles(GameObject gridSpace)
     {
+        swipeDir = SwipeDirection.none;
+
         GameObject newTile;
+        tile tileComponent;
+
+        Vector3 gridSpaceWorldSize = gridSpace.GetComponent<SpriteRenderer>().bounds.size;
+
+        SpriteRenderer tileRend = redTilePrefab.GetComponentInChildren<SpriteRenderer>();
+
+        Vector3 localTileSize = new Vector3(gridSpaceWorldSize.x * redTilePrefab.transform.localScale.x / tileRend.bounds.size.x, gridSpaceWorldSize.y * redTilePrefab.transform.localScale.y / tileRend.bounds.size.y, 1f) * 755f/720f;
 
         //Loop through array of tiles stored in current level
         for (int i = 0; i < currentLevel.tiles.Length; i++)
@@ -252,22 +250,23 @@ public class boardManager : MonoBehaviour {
             //If the current tile's type is red, set its gameobject to the red tile prefab, otherwise set it to blue
             if (currentLevel.tiles[i].type == "red")
             {
-                newTile = redTilePrefab;
+                newTile = Instantiate(redTilePrefab);
             }
             else
             {
-                newTile = blueTilePrefab;
+                newTile = Instantiate(blueTilePrefab);
             }
 
-            //Set values for tile based on current level info
-            newTile.GetComponent<tile>().number = currentLevel.tiles[i].number;
-            newTile.GetComponent<tile>().xPos = currentLevel.tiles[i].xPos;
-            newTile.GetComponent<tile>().yPos = currentLevel.tiles[i].yPos;
+            tileComponent = newTile.GetComponent<tile>();
 
-            newTile.GetComponent<tile>().index = i;//Each tile has unique index to avoid comparisons with itself when checking tiles in tile list
+            tileComponent.setUpTile(currentLevel.tiles[i],i);
 
-            tiles.Add(Instantiate(newTile));//Spawn tile and add it to list, it will sort its position out on awake based on given x and y coords
+            newTile.transform.localScale = localTileSize;            
+
+            tiles.Add(newTile);//Spawn tile and add it to list, it will sort its size and position out on awake based on given x and y coords
         }
+
+        gameState = GameState.playing;
     }
 
     //Add a move to move counter and change UI text to reflect this
@@ -281,8 +280,12 @@ public class boardManager : MonoBehaviour {
     //Clear all tiles and load them again, called when reset button is hit
     public void resetTiles()
     {
+        winPopup.SetActive(false);
+
+        gameState = GameState.stopped;
+
         //Loop through tiles and destroy their gameobjects
-        for(int i = 0; i < tiles.Count; i++)
+        for (int i = 0; i < tiles.Count; i++)
         {
             Destroy(tiles[i]);
         }
@@ -293,6 +296,49 @@ public class boardManager : MonoBehaviour {
         moves = -1;
         addMove();
 
-        LoadTiles();//Reload tiles for current level
+        LoadTiles(GameObject.FindGameObjectWithTag("GridSpace"));//Reload tiles for current level
+    }
+
+    private void winLevel()
+    {
+        winPopup.SetActive(true);
+
+        winPopup.transform.Find("MovesText").GetComponent<Text>().text = "Moves: " + moves;
+        winPopup.transform.Find("ParText").GetComponent<Text>().text = "Par: " + currentLevel.par;
+
+        if(levManager.CurrentHighscore == 0 || moves < levManager.CurrentHighscore)
+        {
+            levManager.CurrentHighscore = moves;
+            levManager.saveLevelInfo();
+        }
+
+        Image starImage = winPopup.transform.Find("StarImage").GetComponent<Image>();
+
+        if (levManager.BeatCurrentPar)
+        {
+            starImage.sprite = goldStar;
+        }
+        else
+        {
+            starImage.sprite = silverStar;
+        }
+    }
+
+    public void loadNextLevel()
+    {
+        gameState = GameState.stopped;
+
+        winPopup.SetActive(false);        
+
+        levManager.loadNextLevel();
+        currentLevel = levManager.CurrentLevel;
+
+        Destroy(GameObject.FindGameObjectWithTag("Grid"));
+
+        //Reset moves counter to 0
+        moves = -1;
+        addMove();
+
+        buildGrid();       
     }
 }

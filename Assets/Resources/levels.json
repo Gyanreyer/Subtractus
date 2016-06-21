@@ -1,8 +1,9 @@
 {
 	"levels":[
 		{
-			"width":"3",
-			"height":"3",
+			"par":2,
+			"width":3,
+			"height":3,
 			"tiles":[
 				{
 					"type":"red",
@@ -26,8 +27,9 @@
 		},
 
 		{
-			"width":"4",
-			"height":"4",
+			"par":4,
+			"width":4,
+			"height":4,
 			"tiles":[
 				{
 					"type":"red",
@@ -57,64 +59,22 @@
 		},
 
 		{
-			"width":"3",
-			"height":"3",
-			"tiles":[
-				{
-					"type":"red",
-					"number":1,
-					"xPos":1,
-					"yPos":0
-				},
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"blue",
-					"number":5,
-					"xPos":1,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":3,
-					"xPos":2,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":2,
-					"yPos":2
-				}
-			]
-		},
-
-		{
-			"width":"3",
-			"height":"3",
-			"tiles":[
+			"par":5,
+			"width":3,
+			"height":3,
+			"tiles":[				
 				{
 					"type":"red",
 					"number":2,
 					"xPos":0,
 					"yPos":1
-				},
+				},	
 				{
 					"type":"red",
 					"number":4,
 					"xPos":0,
 					"yPos":0
-				},
+				},			
 				{
 					"type":"red",
 					"number":2,

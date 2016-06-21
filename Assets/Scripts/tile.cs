@@ -34,29 +34,30 @@ public class tile : MonoBehaviour
 
     private TextMesh numberText;//Text for tile's number
 
-
-    // Use this for initialization
-    void Awake()
+    //Set up tile to match data of a given tile from level, called in board manager when loading tiles
+    public void setUpTile(levelTile levTile, int i)
     {
+        //Store basic tile data from level tile
+        number = levTile.number;
+        xPos = levTile.xPos;
+        yPos = levTile.yPos;
+        index = i;
+
         //Set future coords to current
         futureX = xPos;
         futureY = yPos;
+    }
+
+    // Use this for initialization
+    void Start()
+    {
+        BM = GameObject.Find("BoardManager").GetComponent<boardManager>();//Get board manager for scene, handles input and loading/building board and tiles
 
         state = tileState.idle;//Default state is idle
 
-        GameObject spriteObject = transform.GetChild(0).gameObject;//Get child with sprite for resizing object to fit grid
+        GameObject spriteObject = transform.Find("Sprite").gameObject;//Get child with sprite for resizing object to fit grid
 
-        BM = GameObject.Find("BoardManagerGO").GetComponent<boardManager>();//Get board manager
-
-        GameObject gridSpace = GameObject.FindGameObjectWithTag("GridSpace");//Get a grid space from the board for sizing to match it
-
-        Vector3 gridSpaceWorldSize = gridSpace.GetComponent<SpriteRenderer>().bounds.size;//Get world unit size of grid space
-        gridSpaceWorldSize.x *= spriteObject.transform.localScale.x / GetComponentInChildren<SpriteRenderer>().bounds.size.x;//Convert world sizes to local size for this tile
-        gridSpaceWorldSize.y *= spriteObject.transform.localScale.y / GetComponentInChildren<SpriteRenderer>().bounds.size.y;
-
-        transform.localScale = gridSpaceWorldSize * 755f / 720f;//Modify scale based on portion of tile that is shaded (35px/720px) to add to 3D effect of sprites
-
-        transform.position = GetModifiedDesired();//Set position to appropriate area 
+        transform.position = GetModifiedDesired();//Set position to appropriate area
         desiredLocation = transform.position;//Desired location is same as pos by default
 
         numberText = transform.GetComponentInChildren<TextMesh>();//Get text component for number from child
@@ -91,7 +92,7 @@ public class tile : MonoBehaviour
         futureY = yPos;
 
         //If swipe vector is longer horiz than vert and swipe wasn't being swiped vertically earlier
-        if (BM.swipeDir == SwipeDirection.horizontal)
+        if (BM.SwipeDir == SwipeDirection.horizontal)
         {
             //Determine if swipe is right or left
             if (swipeVector.x > 0)
@@ -104,7 +105,7 @@ public class tile : MonoBehaviour
             } 
         }
         //If swipe vector is vert and wasn't being swiped horiz earlier
-        else if(BM.swipeDir == SwipeDirection.vertical)
+        else if(BM.SwipeDir == SwipeDirection.vertical)
         {
             //Determine if swipe is up or down
             if (swipeVector.y > 0)
@@ -139,7 +140,7 @@ public class tile : MonoBehaviour
 
         swipeVector /= Screen.dpi;//Convert swipe vector from pixels to world units for position
 
-        Vector3 newPos = BM.GridPosition[xPos,yPos] - new Vector3(0,0, 1 + xPos + yPos);//Set new position to position of grid tile is currently at, then modify from there
+        Vector3 newPos = GetModifiedDesired();//Set new position to position of grid tile is currently at, then modify from there
 
         //If future x coords are different and are within bounds of grid, modify x pos based on swipe vector
         if (futureX != xPos && futureX >= 0 && futureX < BM.BoardWidth)
@@ -175,8 +176,8 @@ public class tile : MonoBehaviour
     //Move the tile on the grid based on keyboard input, DELETE THIS EVENTUALLY
     public bool MoveTile(int xChange, int yChange)
     {
-        int newX = xPos + xChange;
-        int newY = yPos + yChange;
+        futureX = xPos + xChange;
+        futureY = yPos + yChange;
 
         tile otherTile;
 
@@ -184,31 +185,17 @@ public class tile : MonoBehaviour
         {
             otherTile = BM.Tiles[i].GetComponent<tile>();
 
-            if (otherTile.xPos == newX && otherTile.yPos == newY && otherTile.type != type)
+            if ((otherTile.futureX == futureX && otherTile.futureY == futureY && otherTile.type != type))
             {
-                desiredLocation = GetModifiedDesired();
+                futureX = xPos;
+                futureY = yPos;
                 return false;
             }
         }
 
+        state = tileState.idle;
 
-        bool moving = false;
-
-        if (xChange != 0 && newX >= 0 && newX < BM.BoardWidth)
-        {
-            xPos = newX;
-            moving = true;
-        }
-        if (yChange != 0 && newY >= 0 && newY < BM.BoardHeight)
-        {
-            yPos = newY;
-            moving = true;
-        }
-
-        
-        desiredLocation = GetModifiedDesired();
-
-        return moving;
+        return MoveTile();
 
     }
 
