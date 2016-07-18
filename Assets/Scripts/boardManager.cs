@@ -57,13 +57,14 @@ public class boardManager : MonoBehaviour {
     //Properties
     public List<GameObject> Tiles { get { return tiles; } }
     public Vector3[,] GridPosition { get { return gridPosition; } }
-    public int BoardWidth { get { return currentLevel.width; } }
-    public int BoardHeight { get { return currentLevel.height; } }
+    public uint BoardWidth { get { return currentLevel.width; } }
+    public uint BoardHeight { get { return currentLevel.height; } }
     public Vector2 TileDist { get { return tileDist; } }
     public SwipeDirection SwipeDir { get { return swipeDir; } }
 
     // Use this for initialization
-    void Start () {
+    void Start () {    
+
         tiles = new List<GameObject>();//Initialize tiles list
 
         swipeDir = SwipeDirection.none;//Set swipe direction to defaul
@@ -228,6 +229,8 @@ public class boardManager : MonoBehaviour {
         LoadTiles(gridSpace);
 
         Destroy(gridSpace);
+
+        Debug.Log("Finished building");
     }
 
     //Loads tiles from current level and places them on grid
@@ -267,6 +270,8 @@ public class boardManager : MonoBehaviour {
         }
 
         gameState = GameState.playing;
+
+        Debug.Log("Loaded");
     }
 
     //Add a move to move counter and change UI text to reflect this
@@ -308,7 +313,7 @@ public class boardManager : MonoBehaviour {
 
         if(levManager.CurrentHighscore == 0 || moves < levManager.CurrentHighscore)
         {
-            levManager.CurrentHighscore = moves;
+            levManager.CurrentHighscore = (uint)moves;
             levManager.saveLevelInfo();
         }
 

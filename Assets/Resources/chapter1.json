@@ -2,6 +2,7 @@
 	"levels":[
 		{
 			"par":2,
+			"best":0,
 			"width":3,
 			"height":3,
 			"tiles":[
@@ -28,6 +29,7 @@
 
 		{
 			"par":4,
+			"best":0,
 			"width":4,
 			"height":4,
 			"tiles":[
@@ -60,6 +62,7 @@
 
 		{
 			"par":5,
+			"best":0,
 			"width":3,
 			"height":3,
 			"tiles":[				

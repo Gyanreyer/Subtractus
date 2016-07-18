@@ -1,5 +1,6 @@
 ﻿[System.Serializable]
-public class levelCollection {
+public class chapter {
 
     public level[] levels;
+
 }

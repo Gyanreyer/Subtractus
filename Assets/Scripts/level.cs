@@ -1,11 +1,11 @@
-﻿
-[System.Serializable]
+﻿[System.Serializable]
 public class level {
 
-    public int par;
+    public uint par;
+    public uint best;
 
-    public int width;
-    public int height;
+    public uint width;
+    public uint height;
 
     public levelTile[] tiles;
 

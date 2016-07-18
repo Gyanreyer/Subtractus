@@ -60,7 +60,7 @@ public class tile : MonoBehaviour
         transform.position = GetModifiedDesired();//Set position to appropriate area
         desiredLocation = transform.position;//Desired location is same as pos by default
 
-        numberText = transform.GetComponentInChildren<TextMesh>();//Get text component for number from child
+        numberText = GetComponentInChildren<TextMesh>();//Get text component for number from child
 
         //Set up number text to display right number and scale correctly so it doesn't get stretched
         numberText.text = number.ToString();

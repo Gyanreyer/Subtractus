@@ -61,17 +61,20 @@
     <Reference Include="UnityEditor">
       <HintPath>Library\UnityAssemblies\UnityEditor.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEditor.iOS.Extensions.Xcode">
+      <HintPath>Library\UnityAssemblies\UnityEditor.iOS.Extensions.Xcode.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEditor.iOS.Extensions.Common">
+      <HintPath>Library\UnityAssemblies\UnityEditor.iOS.Extensions.Common.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Scripts\boardManager.cs" />
+    <Compile Include="Assets\Scripts\chapter.cs" />
+    <Compile Include="Assets\Scripts\chapterButton.cs" />
     <Compile Include="Assets\Scripts\level.cs" />
-    <Compile Include="Assets\Scripts\levelCollection.cs" />
     <Compile Include="Assets\Scripts\levelManager.cs" />
-    <Compile Include="Assets\Scripts\levelSelectButton.cs" />
-    <Compile Include="Assets\Scripts\levelSelectManager.cs" />
     <Compile Include="Assets\Scripts\levelTile.cs" />
-    <Compile Include="Assets\Scripts\save.cs" />
-    <Compile Include="Assets\Scripts\saveCollection.cs" />
     <Compile Include="Assets\Scripts\sceneTransition.cs" />
     <Compile Include="Assets\Scripts\tile.cs" />
   </ItemGroup>
