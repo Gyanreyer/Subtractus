@@ -100,6 +100,64 @@ public class boardManager : MonoBehaviour {
     //Get input from player
     void getInput()
     {
+#if UNITY_EDITOR
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            swipeStartPosition = Input.mousePosition;
+        }
+        else if (Input.GetMouseButton(0))
+        {
+            swipeVector = new Vector2(Input.mousePosition.x - swipeStartPosition.x, Input.mousePosition.y - swipeStartPosition.y);//Update swipe vector from start position to where finger is now
+
+            if (swipeDir == SwipeDirection.none)
+            {
+                //If x axis of swipe vector is longer than minimum length and longer than y, set swipe direction to horiz
+                if (Mathf.Abs(swipeVector.x) > minSwipeDist && Mathf.Abs(swipeVector.x) > Mathf.Abs(swipeVector.y))
+                {
+                    swipeDir = SwipeDirection.horizontal;
+                }
+                //Otherwise if y axis is longer than min length set swipe direction to vert
+                else if (Mathf.Abs(swipeVector.y) > minSwipeDist)
+                {
+                    swipeDir = SwipeDirection.vertical;
+                }
+                else//Otherwise just set swipe direction to default and break early
+                {
+                    swipeDir = SwipeDirection.none;
+                }
+
+                //Loop through all tiles and partially slide them in direction of swipe vector
+                for (int i = 0; i < tiles.Count; i++)
+                {
+                    tiles[i].GetComponent<tile>().PartialSlide(swipeVector);
+                }
+            }
+        }
+        else if (Input.GetMouseButtonUp(0))
+        {
+            swipeDir = SwipeDirection.none;//Reset swipe direction
+
+            bool tilesMoved = false;//Whether any tiles were moved with this swipe, if yes then a move can be added to move counter
+
+            //Loop through all tiles and try to move them
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                //MoveTile returns true if moved and false if not, set tilesMoved to true if any tiles moved
+                if (tiles[i].GetComponent<tile>().MoveTile())
+                {
+                    tilesMoved = true;
+                }
+            }
+
+            //If any tiles moved, add a move to move counter
+            if (tilesMoved)
+            {
+                addMove();
+            }
+        }
+#endif
+
         //If using android, use touch controls
 #if UNITY_ANDROID
         //If player isn't touching the screen, we don't need to do anything so just return early
@@ -110,7 +168,7 @@ public class boardManager : MonoBehaviour {
         Touch touch = Input.GetTouch(0);
 
         //Switch statement based on phase that touch is in, could be started, moved, or ended
-        switch(touch.phase)
+        switch (touch.phase)
         {
             //If touch just began, store the position of the touch as the start position of swipe for future calculations
             case TouchPhase.Began:
@@ -147,7 +205,7 @@ public class boardManager : MonoBehaviour {
                 }
 
                 break;
-            
+
             //If touch has ended, move the tiles appropriately based on swipe made
             case TouchPhase.Ended:
                 swipeDir = SwipeDirection.none;//Reset swipe direction
@@ -158,23 +216,24 @@ public class boardManager : MonoBehaviour {
                 for (int i = 0; i < tiles.Count; i++)
                 {
                     //MoveTile returns true if moved and false if not, set tilesMoved to true if any tiles moved
-                    if(tiles[i].GetComponent<tile>().MoveTile())
+                    if (tiles[i].GetComponent<tile>().MoveTile())
                     {
                         tilesMoved = true;
                     }
                 }
 
                 //If any tiles moved, add a move to move counter
-                if(tilesMoved)
+                if (tilesMoved)
                     addMove();
 
                 break;
         }
-
-        
 #endif
 
     }
+
+
+
 
     //Builds grid based on width and height of current level
     private void buildGrid()
@@ -229,8 +288,6 @@ public class boardManager : MonoBehaviour {
         LoadTiles(gridSpace);
 
         Destroy(gridSpace);
-
-        Debug.Log("Finished building");
     }
 
     //Loads tiles from current level and places them on grid
@@ -270,8 +327,6 @@ public class boardManager : MonoBehaviour {
         }
 
         gameState = GameState.playing;
-
-        Debug.Log("Loaded");
     }
 
     //Add a move to move counter and change UI text to reflect this
@@ -314,12 +369,12 @@ public class boardManager : MonoBehaviour {
         if(levManager.CurrentHighscore == 0 || moves < levManager.CurrentHighscore)
         {
             levManager.CurrentHighscore = (uint)moves;
-            levManager.saveLevelInfo();
+            levManager.saveLevelInfo();           
         }
 
         Image starImage = winPopup.transform.Find("StarImage").GetComponent<Image>();
 
-        if (levManager.BeatCurrentPar)
+        if (levManager.CurrentLevel.par >= moves)
         {
             starImage.sprite = goldStar;
         }
@@ -335,7 +390,7 @@ public class boardManager : MonoBehaviour {
 
         winPopup.SetActive(false);        
 
-        levManager.loadNextLevel();
+        levManager .loadNextLevel();
         currentLevel = levManager.CurrentLevel;
 
         Destroy(GameObject.FindGameObjectWithTag("Grid"));

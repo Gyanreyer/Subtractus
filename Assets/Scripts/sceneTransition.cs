@@ -5,80 +5,100 @@ using UnityEngine.SceneManagement;
 public class sceneTransition : MonoBehaviour {
 
     private Vector3 desiredPos;
-    public GameObject levText;
+    private Vector3 startMenuPos;
+    private Vector3 chaptSelPos;
+    private Vector3 levSelPos;
 
-    private Vector3 chapterViewPosition;
+    private float camMoveSpeed = 25f;
 
     void Start()
     {
-        desiredPos = transform.position;
-        chapterViewPosition = Vector3.zero;
+        if(SceneManager.GetActiveScene().buildIndex == 0)
+        {
+            startMenuPos = GameObject.Find("StartMenu").transform.position - new Vector3(0, 0, 10);
+            chaptSelPos = GameObject.Find("ChapterMenu").transform.position - new Vector3(0, 0, 10);
+            levSelPos = GameObject.Find("LevelMenu").transform.position - new Vector3(0, 0, 10);          
+            
+            levelManager levMan = GameObject.Find("LevelManager").GetComponent<levelManager>();
+
+            if (levMan.ChapterLoaded)
+            {
+                levMan.setupLevelButtons();
+                transform.position = levSelPos + new Vector3(8,0,0);
+                desiredPos = levSelPos;
+            }
+            else
+            {
+                transform.position = startMenuPos;
+                desiredPos = transform.position;
+            }
+
+            
+        }
+        else if(SceneManager.GetActiveScene().buildIndex == 1)
+        {
+            transform.position = new Vector3(-8,0,-10);
+            desiredPos = new Vector3(0,0,-10);
+        }
+        else
+            desiredPos = transform.position;
     }
 
     void Update()
     {
         if(transform.position != desiredPos)
         {
-            transform.position = Vector3.MoveTowards(transform.position,desiredPos,20f*Time.deltaTime);
+            transform.position = Vector3.MoveTowards(transform.position,desiredPos,camMoveSpeed*Time.deltaTime);
         }
     }
 
     //Load level select scene
-    public void loadLevelSelect()
+    private void loadLevelSelect()
     {
         SceneManager.LoadScene("levelSelect");
+    }
+
+    public void backToLevSel()
+    {
+        desiredPos = new Vector3(-7,0,-10);
+        camMoveSpeed = 30f;
+
+        Invoke("loadLevelSelect",.2f);
     }
 
     //Load game scene
     public void loadGame()
     {
+        desiredPos = new Vector3(14,0,-10);
+        camMoveSpeed = 30f;
+
+        Invoke("openGameScene",.2f);
+    }
+
+    private void openGameScene()
+    {
         SceneManager.LoadScene("game");
     }
 
-    public void slideRight()
+    public void slideToLevelSelect()
     {
-        GameObject[] levButtons = GameObject.FindGameObjectsWithTag("LevSelButton");
-        if (levButtons.Length >= 2)
-        {
-            float pos1 = levButtons[0].transform.position.x;
-            float pos2 = levButtons[1].transform.position.x;
-            desiredPos = new Vector3(0.5f * (pos1 + pos2), 0, -10);
-
-            chapterViewPosition = desiredPos;
-
-            GameObject lt = Instantiate(levText);
-
-            lt.transform.SetParent(GameObject.Find("Canvas").transform);
-            lt.transform.position = new Vector3(desiredPos.x,GameObject.Find("ChapterText").transform.position.y,0);
-            lt.transform.localScale = Vector3.one;
-            lt.name = levText.name;
-        }
+        desiredPos = levSelPos;
     }
 
-    public void slideLeft()
+    public void slideToChapterSelect()
     {
-        desiredPos = new Vector3(0,0,-10);
+        desiredPos = chaptSelPos;
+        camMoveSpeed = 25f;
 
-        GameObject[] levButtons = GameObject.FindGameObjectsWithTag("LevSelButton");
-        for(int i = 0; i < levButtons.Length; i++)
-        {
-            Destroy(levButtons[i]);
-        }
+        Invoke("destroyLevelButtons", .3f);
 
-        Destroy(GameObject.Find("LevelsText"));
-        Destroy(GameObject.FindGameObjectWithTag("BackButton"));
     }
 
-    void OnLevelWasLoaded(int index)
+    private void destroyLevelButtons()
     {
-        levelManager levMan = GameObject.Find("LevelManager").GetComponent<levelManager>();
-
-        if (index == 1 && levMan.ChapterLoaded)
+        foreach (GameObject button in GameObject.FindGameObjectsWithTag("LevSelButton"))
         {
-            levMan.setupLevelButtons();
-
-            transform.position = chapterViewPosition;
-            desiredPos = transform.position;
+            Destroy(button);
         }
     }
 

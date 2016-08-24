@@ -48,16 +48,20 @@ public class tile : MonoBehaviour
         futureY = yPos;
     }
 
+    void Awake()
+    {
+        BM = GameObject.Find("BoardManager").GetComponent<boardManager>();//Get board manager for scene, handles input and loading/building board and tile
+    }
+
     // Use this for initialization
     void Start()
     {
-        BM = GameObject.Find("BoardManager").GetComponent<boardManager>();//Get board manager for scene, handles input and loading/building board and tiles
-
         state = tileState.idle;//Default state is idle
 
         GameObject spriteObject = transform.Find("Sprite").gameObject;//Get child with sprite for resizing object to fit grid
 
         transform.position = GetModifiedDesired();//Set position to appropriate area
+        
         desiredLocation = transform.position;//Desired location is same as pos by default
 
         numberText = GetComponentInChildren<TextMesh>();//Get text component for number from child
@@ -212,10 +216,10 @@ public class tile : MonoBehaviour
         {
             xPos = futureX;
             yPos = futureY;
-        }
+        }    
 
         //Set new desired location to animate to based on new coords
-        desiredLocation = GetModifiedDesired();
+        desiredLocation = GetModifiedDesired();     
 
         return moving;//True if tile moved, false if didn't, BM can use to determine if a move should be added to counter
     }
