@@ -4,7 +4,6 @@ using System.Collections;
 public class buttonScroller : MonoBehaviour {
 
     private Vector2 swipeStartPosition;//Start position of swipe made, used to keep track of direction/magnitude of swipe
-    private Vector3 initialButtonsPosition;//Initial position of buttons from when scroll was started
 
     private Vector3 velocity;//Velocity at which buttons scrolling up/down
 
@@ -29,7 +28,6 @@ public class buttonScroller : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             swipeStartPosition = Input.mousePosition;
-            initialButtonsPosition = transform.position;
 
             lastTouchPositionY = swipeStartPosition.y;
         }
@@ -99,7 +97,6 @@ public class buttonScroller : MonoBehaviour {
                 //If touch just began, store the position of the touch as the start position of swipe for future calculations
                 case TouchPhase.Began:
                     swipeStartPosition = touch.position;
-                    initialButtonsPosition = transform.position;
 
                     lastTouchPositionY = touch.position.y;
                     break;

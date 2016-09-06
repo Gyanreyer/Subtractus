@@ -5,7 +5,8 @@ public class tile : MonoBehaviour
     public enum tileType
     {
         red,
-        blue
+        blue,
+        gray
     }
 
     public enum tileState
@@ -58,18 +59,20 @@ public class tile : MonoBehaviour
     {
         state = tileState.idle;//Default state is idle
 
-        GameObject spriteObject = transform.Find("Sprite").gameObject;//Get child with sprite for resizing object to fit grid
+        //GameObject spriteObject = transform.Find("Sprite").gameObject;//Get child with sprite for resizing object to fit grid
 
         transform.position = GetModifiedDesired();//Set position to appropriate area
         
         desiredLocation = transform.position;//Desired location is same as pos by default
 
-        numberText = GetComponentInChildren<TextMesh>();//Get text component for number from child
+        if (type != tileType.gray)
+        {
+            numberText = GetComponentInChildren<TextMesh>();//Get text component for number from child
 
-        //Set up number text to display right number and scale correctly so it doesn't get stretched
-        numberText.text = number.ToString();
-        numberText.gameObject.transform.localScale *= spriteObject.transform.localScale.x;
-
+            //Set up number text to display right number and scale correctly so it doesn't get stretched
+            numberText.text = number.ToString();
+            numberText.gameObject.transform.localScale *= transform.Find("Sprite").localScale.x;
+        }
     }
 
     // Update is called once per frame
@@ -86,7 +89,7 @@ public class tile : MonoBehaviour
     public void PartialSlide(Vector2 swipeVector)
     {
         //If currently animating, ignore swipes until done
-        if (state == tileState.animating)
+        if (state == tileState.animating || type == tileType.gray)
             return;
 
         state = tileState.swiping;//Set state to swiping
@@ -189,7 +192,7 @@ public class tile : MonoBehaviour
         {
             otherTile = BM.Tiles[i].GetComponent<tile>();
 
-            if ((otherTile.futureX == futureX && otherTile.futureY == futureY && otherTile.type != type))
+            if ((otherTile.futureX == futureX && otherTile.futureY == futureY) && otherTile.type != type)
             {
                 futureX = xPos;
                 futureY = yPos;

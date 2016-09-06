@@ -3,6 +3,7 @@ using UnityEngine.SceneManagement;
 using System.IO;
 using UnityEngine.UI;
 using System.Collections;
+using System.Linq;
 
 public class levelManager : MonoBehaviour {
 
@@ -34,6 +35,8 @@ public class levelManager : MonoBehaviour {
         get { return currentChapter != null; }
     }
 
+    public bool LastLevel { get { return !((levelNumber + 1) < currentChapter.levels.Length); } }
+
     // Use this for initialization
     void Awake () {
         //If this is a duplicate of the original persistant LevelManager then destroy this GO
@@ -56,6 +59,8 @@ public class levelManager : MonoBehaviour {
         chapterNumber = chapter;//Store current chapter number for future use
         string chapterFilePath = chapterFilePathStub + chapter + ".json";//Get full file path to this chapter
 
+        Debug.Log("Loaded: " + chapterFilePath);
+
         //ALL THIS FILE CHECKING STUFF SHOULD GO FOR FINAL RELEASE, ABSOLUTELY NOT NECESSARY BUT KINDA MAKES ANY TWEAKS DURING DEV EASIER
         //If chapter save file doesn't exist at persistent path, load the default from Resources and store its file at correct path
         if (!File.Exists(chapterFilePath))
@@ -72,24 +77,39 @@ public class levelManager : MonoBehaviour {
             level[] levelsCheck = JsonUtility.FromJson<chapter>(Resources.Load<TextAsset>("chapter" + chapter).text).levels;//Load in official default file to check against
 
             bool changeFound = false;//Whether a change has been found between save file and default
-
+            
             for(int i = 0; i < currentChapter.levels.Length; i++)
             {
+                
+
                 //If a disparity is found, set stored level to match default official one
-                if(currentChapter.levels[i].tiles.Equals(levelsCheck[i].tiles))
-                {
-                    Debug.Log("Error found at level " + i);
+                if (levelsCheck[i].tiles.Length != currentChapter.levels[i].tiles.Length || levelsCheck[i].par != currentChapter.levels[i].par)
+                {                                       
                     currentChapter.levels[i] = levelsCheck[i];
-                    changeFound = true;
+                    changeFound = true;               
                 }
-                else//Otherwise, store high score in levels check to avoid it being overwritten if other disparities found
+                else
                 {
-                    levelsCheck[i].best = currentChapter.levels[i].best;
+                    for (int j = 0; j < levelsCheck[i].tiles.Length; j++)
+                    {
+                        //Debug.Log(JsonUtility.ToJson(currentChapter.levels[i].tiles[j]));
+                        if(JsonUtility.ToJson(currentChapter.levels[i].tiles[j]) != JsonUtility.ToJson(levelsCheck[i].tiles[j]))
+                        {
+                            currentChapter.levels[i] = levelsCheck[i];
+                            break;
+                        }
+
+                        if(j >= levelsCheck[i].tiles.Length)
+                        {
+                            levelsCheck[i].best = currentChapter.levels[i].best;
+                        }
+                    }                    
                 }
+
             }       
             
             //If there's less levels in file than should be, reset to newer levels (this will retain high scores)
-            if(currentChapter.levels.Length < levelsCheck.Length)
+            if(currentChapter.levels.Length != levelsCheck.Length)
             {
                 currentChapter.levels = levelsCheck;
                 changeFound = true;
@@ -157,7 +177,7 @@ public class levelManager : MonoBehaviour {
                     //If best score beat par on this level, display star
                     if (best > 0 && best <= currentChapter.levels[i].par)
                     {                   
-                        currentLevelButton.transform.GetChild(1).gameObject.SetActive(true);
+                        currentLevelButton.transform.GetChild(1).gameObject.SetActive(true);//NOTE: ADD CHECK MARK TO INDICATE IF DIDN'T BEAT PAR
                     }
                 }
                 else//If this level is locked then stop checking against locked levels

@@ -111,365 +111,174 @@
 			]
 		},
 
-				{
-			"par":4,
+		{
+			"par":5,
 			"best":0,
-			"width":4,
-			"height":4,
+			"width":3,
+			"height":3,
 			"tiles":[
 				{
 					"type":"red",
-					"number":3,
+					"number":1,
 					"xPos":0,
-					"yPos":3
+					"yPos":0
 				},
 				{
 					"type":"red",
-					"number":2,
+					"number":1,
+					"xPos":1,
+					"yPos":1
+				},
+				{
+					"type":"red",
+					"number":3,
 					"xPos":0,
 					"yPos":2
 				},
 				{
 					"type":"red",
+					"number":3,
+					"xPos":1,
+					"yPos":2
+				},
+				{
+					"type":"blue",
+					"number":4,
+					"xPos":1,
+					"yPos":0
+				},
+				{
+					"type":"blue",
+					"number":2,
+					"xPos":2,
+					"yPos":0
+				},
+				{
+					"type":"blue",
 					"number":1,
 					"xPos":0,
 					"yPos":1
 				},
 				{
-					"type":"red",
+					"type":"blue",
+					"number":1,
+					"xPos":2,
+					"yPos":1
+				},
+				{
+					"type":"blue",
 					"number":2,
-					"xPos":0,
-					"yPos":0
+					"xPos":2,
+					"yPos":2
 				}
 			]
 		},
 
-				{
-			"par":4,
+		{
+			"par":6,
 			"best":0,
-			"width":4,
-			"height":4,
+			"width":3,
+			"height":3,
 			"tiles":[
 				{
 					"type":"red",
-					"number":3,
+					"number":1,
 					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
+					"yPos":0
 				},
 				{
 					"type":"red",
 					"number":1,
+					"xPos":0,
+					"yPos":2
+				},
+				{
+					"type":"gray",
+					"number":0,
+					"xPos":0,
+					"yPos":1
+				},
+				{
+					"type":"gray",
+					"number":0,
+					"xPos":1,
+					"yPos":1
+				},
+				{
+					"type":"blue",
+					"number":2,
+					"xPos":1,
+					"yPos":2
+				},
+				{
+					"type":"blue",
+					"number":3,
+					"xPos":2,
+					"yPos":2
+				},
+				{
+					"type":"blue",
+					"number":4,
+					"xPos":2,
+					"yPos":1
+				},
+				{
+					"type":"blue",
+					"number":1,
+					"xPos":2,
+					"yPos":0
+				}
+			]
+		},
+		{
+			"par":6,
+			"best":0,
+			"width":3,
+			"height":3,
+			"tiles":[
+				{
+					"type":"gray",
+					"number":0,
+					"xPos":1,
+					"yPos":0
+				},
+				{
+					"type":"gray",
+					"number":0,
+					"xPos":0,
+					"yPos":2
+				},
+				{
+					"type":"gray",
+					"number":0,
+					"xPos":2,
+					"yPos":2
+				},
+				{
+					"type":"red",
+					"number":2,
 					"xPos":0,
 					"yPos":1
 				},
 				{
 					"type":"red",
 					"number":2,
+					"xPos":2,
+					"yPos":0
+				},
+				{
+					"type":"blue",
+					"number":1,
 					"xPos":0,
 					"yPos":0
+				},
+				{
+					"type":"blue",
+					"number":1,
+					"xPos":2,
+					"yPos":1
 				}
-			]
-		},
 
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
-			]
-		},
-				{
-			"par":4,
-			"best":0,
-			"width":4,
-			"height":4,
-			"tiles":[
-				{
-					"type":"red",
-					"number":3,
-					"xPos":0,
-					"yPos":3
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":2
-				},
-				{
-					"type":"red",
-					"number":1,
-					"xPos":0,
-					"yPos":1
-				},
-				{
-					"type":"red",
-					"number":2,
-					"xPos":0,
-					"yPos":0
-				}
 			]
 		}
 

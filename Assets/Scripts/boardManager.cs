@@ -2,51 +2,64 @@
 using System.Collections.Generic;
 using UnityEngine.UI;
 
+
+//Enum for direction of swipe
 public enum SwipeDirection
 {  
-    horizontal,
-    vertical,
-    none
+    horizontal,//Longer on x than y axis
+    vertical,//Longer on y than x axis
+    none//Shorter than min swipe dist, not detected
 }
 
 public class boardManager : MonoBehaviour {
 
+    //Enum for state game is currently in
     private enum GameState
     {
-        playing,
-        won,
-        stopped
+        playing,//Game is in progress, trying to solve puzzle
+        won//Game is over, on win screen
     }
 
-    //Prefabs for red and blue tiles, each has sprite and number text
+    //Prefabs for red, blue, and gray tiles, each has sprite and number text
     public GameObject redTilePrefab;
     public GameObject blueTilePrefab;
+    public GameObject grayTilePrefab;
+
 
     //Prefabs for grid's background and spaces to use when building the level's grid
     public GameObject gridBG;
     public GameObject gridSpacePrefab;
 
+    public GameObject fireworksPartSys;//Particle system for fireworks that shoots off when player wins
 
-    public Sprite silverStar;
-    public Sprite goldStar;
+    //Sprites for star that is displayed when player wins, index 0 is silver star for if didn't beat par, index 1 is gold star if did beat it
+    public Sprite[] stars;
 
+    //Sound effects that are played during game play
+    //0 - Touch sound effect when player begins a swipe
+    //1 - Slide sound effect when player completes swipe and tiles slide into place
+    //2 - Win chime sound when player beats level
+    public AudioClip[] soundEffects;
     
-    public GameObject winPopup;//Popup UI menu that appears when player beats game
-    public Text movesText;//UI text for moves counter
+    private GameObject winScreen;//Popup UI menu that appears when player beats game
 
     private levelManager levManager;//Level manager used to build board for current level, get it in Start
     private level currentLevel;//The current level to reference for building board, accessed from level manager
+
+    private AudioSource soundPlayer;//Audio source component plays sound effects
 
     private const float minSwipeDist = 50f;//Minimum distance to detect a swipe
     private Vector2 swipeStartPosition;//Point on screen where player started a swipe
     private Vector2 swipeVector;//Vector from start position to where player's finger is now to represent swipe
     private SwipeDirection swipeDir;//Direction that current swipe is in
 
-    private GameState gameState;
+    private GameState gameState;//State game is currently in, either playing or win
 
     private Vector3[,] gridPosition;//2D array of the coordinates for each space on the grid
 
     private List<GameObject> tiles;//List of all active tiles in level
+
+    private int grayTilesCount;//Number of gray tiles in puzzle, allows win check to ignore gray tiles in tile list when checking if all tiles removed
 
     private int moves = 0;//Number of moves the player has made for this level
     private float borderWidth = 0.02f;//Width of borders between spaces on grid in percent of background size
@@ -63,7 +76,9 @@ public class boardManager : MonoBehaviour {
     public SwipeDirection SwipeDir { get { return swipeDir; } }
 
     // Use this for initialization
-    void Start () {    
+    void Start () {
+        winScreen = GameObject.Find("WinScreen");//Get win screen GO so its contents can be modified when player wins
+        soundPlayer = GetComponent<AudioSource>();//Get audio source component so can play sound effects
 
         tiles = new List<GameObject>();//Initialize tiles list
 
@@ -73,25 +88,26 @@ public class boardManager : MonoBehaviour {
         currentLevel = levManager.CurrentLevel;//Get current level from level manager, will reference this for building board
 
         worldScreenWidth = Camera.main.orthographicSize * 2f * Screen.width / Screen.height;//Get width of screen in world units
-                                                                                                  //(orthographic size of cam is 1/2 of screen height, so multiply by 2 and then the ratio of width/height to get width)
+                                                                                            //(orthographic size of cam is 1/2 of screen height, so multiply by 2 and then the ratio of width/height to get width)
 
         localScreenWidth = worldScreenWidth / gridBG.GetComponent<SpriteRenderer>().bounds.size.x;//Get local width of screen by dividing world width by width of background sprite
 
-
         buildGrid();//Sets up grid with appropriate spaces reflecting current level's width and height, then calls LoadTiles function to load in tiles
 
-        gameState = GameState.playing;
+        gameState = GameState.playing;//Default state to playing
     }
 
 	// Update is called once per frame
 	void Update () {
-        if(tiles.Count <= 0)
+
+        //If there are still non-gray tiles in play and the game hasn't registered that player has won yet, switch over game state and run winLevel() to set everything up
+        if(tiles.Count <= grayTilesCount && gameState != GameState.won)
         {
             gameState = GameState.won;
             winLevel();
         }
 
-        
+        //Otherwise if the game is in a play state, check for input
         else if(gameState == GameState.playing)
             getInput();//Get input from player each frame while playing          
             
@@ -120,18 +136,24 @@ public class boardManager : MonoBehaviour {
                 //Otherwise if y axis is longer than min length set swipe direction to vert
                 else if (Mathf.Abs(swipeVector.y) > minSwipeDist)
                 {
-                    swipeDir = SwipeDirection.vertical;
+                    swipeDir = SwipeDirection.vertical;  
                 }
                 else//Otherwise just set swipe direction to default and break early
                 {
                     swipeDir = SwipeDirection.none;
                 }
 
-                //Loop through all tiles and partially slide them in direction of swipe vector
-                for (int i = 0; i < tiles.Count; i++)
-                {
-                    tiles[i].GetComponent<tile>().PartialSlide(swipeVector);
-                }
+                //Play pop sound effect when swipe is long enough to register
+                if(swipeDir != SwipeDirection.none)
+                    soundPlayer.PlayOneShot(soundEffects[0]);
+
+
+            }
+
+            //Loop through all tiles and partially slide them in direction of swipe vector
+            for (int i = 0; i < tiles.Count; i++)
+            {
+                tiles[i].GetComponent<tile>().PartialSlide(swipeVector);
             }
         }
         else if (Input.GetMouseButtonUp(0))
@@ -153,6 +175,7 @@ public class boardManager : MonoBehaviour {
             //If any tiles moved, add a move to move counter
             if (tilesMoved)
             {
+                soundPlayer.PlayOneShot(soundEffects[1]);//Play slide sound effect
                 addMove();
             }
         }
@@ -196,6 +219,8 @@ public class boardManager : MonoBehaviour {
                         swipeDir = SwipeDirection.none;
                         break;
                     }
+
+                    soundPlayer.PlayOneShot(soundEffects[0]);//Play pop sound effect when swipe long enough, break will skip it otherwise
                 }
 
                 //Loop through all tiles and partially slide them in direction of swipe vector
@@ -209,6 +234,8 @@ public class boardManager : MonoBehaviour {
             //If touch has ended, move the tiles appropriately based on swipe made
             case TouchPhase.Ended:
                 swipeDir = SwipeDirection.none;//Reset swipe direction
+
+                soundPlayer.PlayOneShot(soundEffects[1]);//Play slide sound effect
 
                 bool tilesMoved = false;//Whether any tiles were moved with this swipe, if yes then a move can be added to move counter
 
@@ -238,7 +265,7 @@ public class boardManager : MonoBehaviour {
     //Builds grid based on width and height of current level
     private void buildGrid()
     {
-        currentLevel = levManager.CurrentLevel;
+        currentLevel = levManager.CurrentLevel;//Get level to load from level manager
 
         GameObject background = Instantiate(gridBG);//Instantiate background for grid
 
@@ -269,31 +296,40 @@ public class boardManager : MonoBehaviour {
         //Loop through all grid coordinates and spawn a new space at each one
         for (int y = 0; y < currentLevel.height; y++)
         {
+            //Move gridSpace back to start of row
             gridSpace.transform.position = new Vector3(startPos.x,gridSpace.transform.position.y,-0.5f);
 
             for (int x = 0; x < currentLevel.width; x++)
             {
-                //Instantiate at appropriate position based on coordinates
-                newSpace = Instantiate(gridSpace);//(GameObject)Instantiate(gridSpacePrefab, startPos + new Vector3((worldBorder.x + spaceWorldScale.x) * x, (worldBorder.y + spaceWorldScale.y) * y, -0.5f), Quaternion.identity);
-                newSpace.transform.parent = background.transform;
+                //Instantiate a copy of gridSpace at its current position
+                newSpace = Instantiate(gridSpace);
+                newSpace.transform.parent = background.transform;//Make space a child of background
 
                 gridPosition[x, y] = newSpace.transform.position;//Store position for grid space at these coordinates
 
-                gridSpace.transform.position += new Vector3(tileDist.x,0,0);
+                gridSpace.transform.position += new Vector3(tileDist.x,0,0);//Move gridSpace along to next x pos on grid
             }
 
-            gridSpace.transform.position += new Vector3(0,tileDist.y,0);
+            gridSpace.transform.position += new Vector3(0,tileDist.y,0);//Increment y pos to next row on grid
         }
 
-        LoadTiles(gridSpace);
+        LoadTiles(gridSpace);//Load tiles to place on board
 
-        Destroy(gridSpace);
+        Destroy(gridSpace);//Destroy gridSpace object now that done with it
     }
 
     //Loads tiles from current level and places them on grid
     private void LoadTiles(GameObject gridSpace)
     {
         swipeDir = SwipeDirection.none;
+
+        //Loop through currently existing leftover tiles and destroy their gameobjects
+        for (int i = 0; i < tiles.Count; i++)
+        {
+            Destroy(tiles[i]);
+        }
+
+        tiles.Clear();//Clear tiles list
 
         GameObject newTile;
         tile tileComponent;
@@ -304,18 +340,27 @@ public class boardManager : MonoBehaviour {
 
         Vector3 localTileSize = new Vector3(gridSpaceWorldSize.x * redTilePrefab.transform.localScale.x / tileRend.bounds.size.x, gridSpaceWorldSize.y * redTilePrefab.transform.localScale.y / tileRend.bounds.size.y, 1f) * 755f/720f;
 
+        grayTilesCount = 0;
+
         //Loop through array of tiles stored in current level
         for (int i = 0; i < currentLevel.tiles.Length; i++)
         {
-            //If the current tile's type is red, set its gameobject to the red tile prefab, otherwise set it to blue
-            if (currentLevel.tiles[i].type == "red")
+            //Set gameobject to appropriate type/color
+            switch (currentLevel.tiles[i].type)
             {
-                newTile = Instantiate(redTilePrefab);
+                case "red":
+                    newTile = Instantiate(redTilePrefab);
+                    break;
+                case "blue":
+                    newTile = Instantiate(blueTilePrefab);
+                    break;
+                default:
+                    grayTilesCount++;
+                    newTile = Instantiate(grayTilePrefab);
+                    break;
+
             }
-            else
-            {
-                newTile = Instantiate(blueTilePrefab);
-            }
+          
 
             tileComponent = newTile.GetComponent<tile>();
 
@@ -334,37 +379,38 @@ public class boardManager : MonoBehaviour {
     {
         moves++;
 
-        movesText.text = "Moves: " + moves;
+        GameObject.Find("MovesText").GetComponent<Text>().text = "Moves: " + moves;
     }
 
     //Clear all tiles and load them again, called when reset button is hit
     public void resetTiles()
     {
-        winPopup.SetActive(false);
-
-        gameState = GameState.stopped;
-
-        //Loop through tiles and destroy their gameobjects
-        for (int i = 0; i < tiles.Count; i++)
-        {
-            Destroy(tiles[i]);
-        }
-
-        tiles.Clear();//Clear tiles list
+        Camera.main.GetComponent<sceneTransition>().slideToPoint(0, 0);
 
         //Reset moves counter to 0
         moves = -1;
         addMove();
 
-        LoadTiles(GameObject.FindGameObjectWithTag("GridSpace"));//Reload tiles for current level
+        LoadTiles(GameObject.FindGameObjectWithTag("GridSpace"));//Reload tiles for current level    
+        
     }
 
+    private void moveCameraDown()
+    {
+        Camera.main.GetComponent<sceneTransition>().slideToPoint(0, winScreen.transform.position.y);
+    }
+
+    //Runs when player has cleared tiles in level
     private void winLevel()
     {
-        winPopup.SetActive(true);
+        soundPlayer.PlayOneShot(soundEffects[2]);
 
-        winPopup.transform.Find("MovesText").GetComponent<Text>().text = "Moves: " + moves;
-        winPopup.transform.Find("ParText").GetComponent<Text>().text = "Par: " + currentLevel.par;
+        Invoke("shootFireworks", .25f);
+        Invoke("shootFireworks", .4f);
+        Invoke("shootFireworks", .55f);
+
+        winScreen.transform.Find("FinalMovesText").GetComponent<Text>().text = "Moves: " + moves;
+        winScreen.transform.Find("ParText").GetComponent<Text>().text = "Par: " + currentLevel.par;
 
         if(levManager.CurrentHighscore == 0 || moves < levManager.CurrentHighscore)
         {
@@ -372,25 +418,40 @@ public class boardManager : MonoBehaviour {
             levManager.saveLevelInfo();           
         }
 
-        Image starImage = winPopup.transform.Find("StarImage").GetComponent<Image>();
+        Image starImage = winScreen.transform.Find("StarImage").GetComponent<Image>();
 
         if (levManager.CurrentLevel.par >= moves)
         {
-            starImage.sprite = goldStar;
+            starImage.sprite = stars[1];
         }
         else
         {
-            starImage.sprite = silverStar;
+            starImage.sprite = stars[0];
         }
+
+        Invoke("moveCameraDown",1f);
+
+        if(levManager.LastLevel)
+        {
+            GameObject.Find("NextButton").GetComponent<Button>().interactable = false;
+
+            Color disabledColor = new Color(.6f, .6f, .6f, .6f);
+
+            GameObject.Find("NextText").GetComponent<Text>().color = disabledColor;
+            GameObject.Find("NextIcon").GetComponent<Image>().color = disabledColor;
+            
+        }
+
+    }
+
+    private void shootFireworks()
+    {
+        Instantiate(fireworksPartSys, new Vector3(Random.Range(-3,3), Random.Range(-4, 4), -6), Quaternion.identity);
     }
 
     public void loadNextLevel()
     {
-        gameState = GameState.stopped;
-
-        winPopup.SetActive(false);        
-
-        levManager .loadNextLevel();
+        levManager.loadNextLevel();
         currentLevel = levManager.CurrentLevel;
 
         Destroy(GameObject.FindGameObjectWithTag("Grid"));
@@ -399,6 +460,8 @@ public class boardManager : MonoBehaviour {
         moves = -1;
         addMove();
 
-        buildGrid();       
+        buildGrid();
+
+        Camera.main.GetComponent<sceneTransition>().slideToPoint(0, 0);
     }
 }

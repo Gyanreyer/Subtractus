@@ -5,19 +5,27 @@ using UnityEngine.SceneManagement;
 public class sceneTransition : MonoBehaviour {
 
     private Vector3 desiredPos;
+
     private Vector3 startMenuPos;
     private Vector3 chaptSelPos;
     private Vector3 levSelPos;
+    private Vector3 settingsMenuPos;
 
-    private float camMoveSpeed = 25f;
+    private float animTime;
+    public float animDuration = 2f;
+
+    private float shakeAmount = .07f;
+    private float shakeDecrease = 5f;
+    private float shakeTime;
 
     void Start()
     {
         if(SceneManager.GetActiveScene().buildIndex == 0)
         {
-            startMenuPos = GameObject.Find("StartMenu").transform.position - new Vector3(0, 0, 10);
+           // startMenuPos = GameObject.Find("StartMenu").transform.position - new Vector3(0, 0, 10);
             chaptSelPos = GameObject.Find("ChapterMenu").transform.position - new Vector3(0, 0, 10);
-            levSelPos = GameObject.Find("LevelMenu").transform.position - new Vector3(0, 0, 10);          
+            levSelPos = GameObject.Find("LevelMenu").transform.position - new Vector3(0, 0, 10);
+            settingsMenuPos = GameObject.Find("SettingsMenu").transform.position - new Vector3(0,0,10);    
             
             levelManager levMan = GameObject.Find("LevelManager").GetComponent<levelManager>();
 
@@ -29,15 +37,16 @@ public class sceneTransition : MonoBehaviour {
             }
             else
             {
-                transform.position = startMenuPos;
+                //transform.position = startMenuPos;
                 desiredPos = transform.position;
             }
+
+            
 
             
         }
         else if(SceneManager.GetActiveScene().buildIndex == 1)
         {
-            transform.position = new Vector3(-8,0,-10);
             desiredPos = new Vector3(0,0,-10);
         }
         else
@@ -46,52 +55,83 @@ public class sceneTransition : MonoBehaviour {
 
     void Update()
     {
-        if(transform.position != desiredPos)
+        if(shakeTime > 0)
         {
-            transform.position = Vector3.MoveTowards(transform.position,desiredPos,camMoveSpeed*Time.deltaTime);
+            transform.position = desiredPos + (Vector3)Random.insideUnitCircle * shakeAmount;
+
+            shakeTime -= Time.deltaTime * shakeDecrease;
         }
+
+        else if(transform.position != desiredPos)
+        {
+            animTime += Time.deltaTime;
+            transform.position = Vector3.Lerp(transform.position,desiredPos,animTime/animDuration);
+        }
+        else
+        {
+            animTime = 0;
+        }
+    }
+
+    public void shake()
+    {
+        shakeTime = .7f;
     }
 
     //Load level select scene
     private void loadLevelSelect()
     {
-        SceneManager.LoadScene("levelSelect");
+        SceneManager.LoadScene("menus");
     }
-
-    public void backToLevSel()
-    {
-        desiredPos = new Vector3(-7,0,-10);
-        camMoveSpeed = 30f;
-
-        Invoke("loadLevelSelect",.2f);
-    }
-
-    //Load game scene
-    public void loadGame()
-    {
-        desiredPos = new Vector3(14,0,-10);
-        camMoveSpeed = 30f;
-
-        Invoke("openGameScene",.2f);
-    }
-
     private void openGameScene()
     {
         SceneManager.LoadScene("game");
     }
 
+    public void backToLevSel()
+    {
+        slideToPoint(-7,transform.position.y);
+
+        Invoke("loadLevelSelect",.3f);        
+    }    
+
+    //Load game scene
+    public void loadGame()
+    {
+        slideToPoint(14,0);
+
+        Invoke("openGameScene",.3f);
+    }
+
     public void slideToLevelSelect()
     {
-        desiredPos = levSelPos;
+        slideToPoint(levSelPos);
     }
 
     public void slideToChapterSelect()
     {
-        desiredPos = chaptSelPos;
-        camMoveSpeed = 25f;
+        slideToPoint(chaptSelPos);
+        Invoke("destroyLevelButtons", .4f);
+    }
 
-        Invoke("destroyLevelButtons", .3f);
+    public void slideToSettings()
+    {
+        slideToPoint(settingsMenuPos);
+    }
 
+    public void slideToPoint(float x, float y)
+    { 
+        if (desiredPos.x != x || desiredPos.y != y)
+            desiredPos = new Vector3(x, y, -10);
+        
+        GetComponent<AudioSource>().Play();
+        animTime = 0;
+                 
+    }
+
+    public void slideToPoint(Vector3 point)
+    {
+        slideToPoint(point.x,point.y);
     }
 
     private void destroyLevelButtons()
@@ -102,4 +142,8 @@ public class sceneTransition : MonoBehaviour {
         }
     }
 
+    public void toggleSound()
+    {
+
+    }
 }
